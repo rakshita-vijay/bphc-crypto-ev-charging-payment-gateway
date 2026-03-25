@@ -9,6 +9,9 @@ class Grid:
   def register_franchise(self, franchise):
     self.franchises[franchise.fid] = franchise
 
+  def generate_vfid(self, fid):
+    # using lwc algo
+
   def validate_transaction(self, vmid, pin, amount):
     for user in self.users.values():
       if user.vmid == vmid and user.pin == pin:
