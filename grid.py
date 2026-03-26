@@ -3,6 +3,20 @@ class Grid:
     self.users = {}
     self.franchises = {}
 
+  def sha3_algo(self, message):
+    # can we just import it? or should we code it out?
+    try:
+      return hashlib.sha3_256(message.encode()).hexdigest()
+    except:
+      return "Could not hash"
+    # this returns hex code
+
+  def generate_fid(self):
+    message = f"{self.f_name}, {self.f_time_acc_create}, {self.f_pwd}"
+    ct = ((sha3_algo(message)).upper())[:16]
+    # unique to every station and shouldn’t be shared
+    return ct
+
   def register_user(self, user):
     self.users[user.uid] = user
 
