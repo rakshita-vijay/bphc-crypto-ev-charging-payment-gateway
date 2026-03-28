@@ -29,7 +29,7 @@ class Kiosk:
     fran = Franchise()
     fran.display_qrcode(f"qrcode_{hashed_fid}.png")
 
-  if (decode_qr = 0 and 0):
+  if (steps_to_decode_qr = 1 and 0):
     # 2. Decode QR Code and Verify Hash
     # This script reads the QR code and returns the hash string.
     # python
@@ -50,8 +50,4 @@ class Kiosk:
 
   def process_payment(self, fid, vmid, pin, amount):
     success = self.grid.validate_transaction(fid, vmid, pin, amount)
-
-    if success:
-      self.franchise.confirmation(True, amount)
-    else:
-      self.franchise.confirmation(False)
+    self.franchise.confirmation(success, amount)

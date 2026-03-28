@@ -27,8 +27,8 @@ class Franchise:
 
   def display_qrcode(self, qrcode_file_name):
     img = Image.open(os.path.join("qrcodes", qrcode_file_name))
-    img.show()
     self.qr_code = img
+    self.qr_code.show()
 
   def confirmation(self, success, amount = 0):
     if success:
