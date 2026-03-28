@@ -1,9 +1,11 @@
 import qrcode
 import os
+from franchise import Franchise.display_qrcode
 
 class Kiosk:
-  def __init__(self):
-    self.x = x
+  def __init__(self, grid, franchise):
+    self.grid = grid
+    self.franchise = franchise
 
   def generate_qrcode(self, hashed_fid):
     # hashed_fid - data to encode in the QR code
@@ -23,4 +25,33 @@ class Kiosk:
     os.makedirs("qrcodes", exist_ok=True)
     img.save(f"qrcodes/qrcode_{hashed_fid}.png")
 
-    print(f"QR code generated and saved as my_qrcode_{hashed_fid}.png")
+    print(f"QR code generated and saved as qrcode_{hashed_fid}.png")
+    fran = Franchise()
+    fran.display_qrcode(f"qrcode_{hashed_fid}.png")
+
+  if (decode_qr = 0 and 0):
+    # 2. Decode QR Code and Verify Hash
+    # This script reads the QR code and returns the hash string.
+    # python
+    # from pyzbar.pyzbar import decode
+    # from PIL import Image
+
+    # # 1. Load and decode the QR code
+    # img = Image.open("hashed_qrcode.png")
+    # decoded_objects = decode(img)
+
+    # # 2. Extract the hash
+    # for obj in decoded_objects:
+    #     scanned_hash = obj.data.decode('utf-8')
+    #     print(f"Scanned Hash: {scanned_hash}")
+
+    # # NOTE: To "verify", you must re-hash known data and
+    # # check if the hashes match.
+
+  def process_payment(self, fid, vmid, pin, amount):
+    success = self.grid.validate_transaction(fid, vmid, pin, amount)
+
+    if success:
+      self.franchise.confirmation(True, amount)
+    else:
+      self.franchise.confirmation(False)
