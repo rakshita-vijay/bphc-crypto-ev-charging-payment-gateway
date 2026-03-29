@@ -2,6 +2,7 @@ import qrcode
 import os
 from franchise import Franchise.display_qrcode
 import datetime
+import hashlib
 
 class Kiosk:
   def __init__(self, grid, franchise):
@@ -20,8 +21,9 @@ class Kiosk:
 
     timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S")).split(" ")
     vfid = f"{hashed_fid}, {timestamp}"
+    hashed_vfid = hashlib.sha3_256(vfid.encode()).hexdigest()[:16]
 
-    qr.add_data(vfid)
+    qr.add_data(hashed_vfid)
     qr.make(fit=True)
 
     # Save Image
