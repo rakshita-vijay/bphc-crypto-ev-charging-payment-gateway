@@ -1,6 +1,7 @@
 import qrcode
 import os
 from franchise import Franchise.display_qrcode
+import datetime
 
 class Kiosk:
   def __init__(self, grid, franchise):
@@ -16,7 +17,11 @@ class Kiosk:
       box_size=10,
       border=5,
     )
-    qr.add_data(hashed_fid)
+
+    timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S")).split(" ")
+    vfid = f"{hashed_fid}, {timestamp}"
+
+    qr.add_data(vfid)
     qr.make(fit=True)
 
     # Save Image
