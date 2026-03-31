@@ -29,7 +29,7 @@ def shor_algorithm(n):
         
         r = period(a, n)
 
-        if r is None or r % 2 == 1:
+        if r is None or r % 2 != 0:
             continue
 
         factor1 = math.gcd(pow(a, r // 2) - 1, n)
