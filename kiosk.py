@@ -1,16 +1,28 @@
 import qrcode
 import os
-from franchise import Franchise.display_qrcode
 import datetime
 import hashlib
+
+# from grid import Grid
+# from franchise import Franchise
 
 class Kiosk:
   def __init__(self, grid, franchise):
     self.grid = grid
     self.franchise = franchise
 
-  def generate_qrcode(self, hashed_fid):
+  def generate_qrcode(self):
     # hashed_fid - data to encode in the QR code
+    fid = self.franchise.fid
+
+    timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+    vfid = self.grid.generate_vfid(fid, timestamp)
+    self.franchise.vfid = vfid
+
+    # timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+    # vfid = f"{hashed_fid}, {timestamp}"
+    # vfid = self.grid.generate_vfid(hashed_fid, timestamp) # are we sure this is hashed_fid, timestamp? not fid, timestamp?
+    hashed_vfid = self.grid.sha3_algo(vfid).upper()[:16]
 
     # Generate the QR code image using the make() shortcut function
     qr = qrcode.QRCode(
@@ -19,10 +31,6 @@ class Kiosk:
       border=5,
     )
 
-    timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S")).split(" ")
-    vfid = f"{hashed_fid}, {timestamp}"
-    hashed_vfid = hashlib.sha3_256(vfid.encode()).hexdigest()[:16]
-
     qr.add_data(hashed_vfid)
     qr.make(fit=True)
 
@@ -30,13 +38,13 @@ class Kiosk:
     img = qr.make_image(fill_color="black", back_color="white")
 
     os.makedirs("qrcodes", exist_ok=True)
-    img.save(f"qrcodes/qrcode_{hashed_fid}.png")
+    img.save(f"qrcodes/qrcode_{hashed_vfid}.png")
 
-    print(f"QR code generated and saved as qrcode_{hashed_fid}.png")
-    fran = Franchise()
-    fran.display_qrcode(f"qrcode_{hashed_fid}.png")
+    print(f"QR code generated and saved as qrcode_{hashed_vfid}.png in the folder 'qrcodes'")
+    self.franchise.display_qrcode(f"qrcode_{hashed_vfid}.png")
 
-  if (steps_to_decode_qr = 1 and 0):
+  steps_to_decode_qr = 0
+  if (steps_to_decode_qr):
     # 2. Decode QR Code and Verify Hash
     # This script reads the QR code and returns the hash string.
     # python
