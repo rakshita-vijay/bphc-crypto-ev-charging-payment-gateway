@@ -1,4 +1,5 @@
 from franchise import Franchise
+import hashlib
 
 class Grid:
   def __init__(self):
