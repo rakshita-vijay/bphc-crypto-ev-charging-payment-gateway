@@ -1,7 +1,8 @@
-import qrcode
+
 import os
 import datetime
 import hashlib
+import qrcode
 
 # from grid import Grid
 # from franchise import Franchise
@@ -18,10 +19,6 @@ class Kiosk:
     timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
     vfid = self.grid.generate_vfid(fid, timestamp)
     self.franchise.vfid = vfid
-
-    # timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
-    # vfid = f"{hashed_fid}, {timestamp}"
-    # vfid = self.grid.generate_vfid(hashed_fid, timestamp) # are we sure this is hashed_fid, timestamp? not fid, timestamp?
     hashed_vfid = self.grid.sha3_algo(vfid).upper()[:16]
 
     # Generate the QR code image using the make() shortcut function

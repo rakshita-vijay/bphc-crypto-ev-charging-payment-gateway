@@ -74,8 +74,8 @@ class Grid:
           return True
     return False
 
-  def add_block(self):
-    #
+  def add_block(self, uid, fid, amount):
+    pass
 
-  def add_reverse_block(self):
-    #
+def add_reverse_block(self, uid, fid, amount):
+    pass

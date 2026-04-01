@@ -1,10 +1,8 @@
 import hashlib
-import time
-from datetime import datetime
 import qrcode
 
 class User:
-  def __init__(self, u_name:str, u_phone:str, u_pin:int, u_balance:int = 0, grid):
+  def __init__(self, u_name:str, u_phone:str, u_pin:int, grid, u_balance:int = 0):
     self.u_name = u_name
     self.u_phone = u_phone
     self.u_pin = u_pin
@@ -12,9 +10,8 @@ class User:
     self.grid = grid
 
     self.uid = None
-    conf = self.req_validation_and_generate_uid(self)
-    if (conf):
-      self.vmid = self.generate_vmid()
+    self.req_validation_and_generate_uid()
+    self.vmid = None
 
   def req_validation_and_generate_uid(self):
     confirmation = self.grid.req_user_validation(self)
@@ -22,10 +19,6 @@ class User:
       print(f"User '{self.u_name}' registered with UID: {self.uid}")
     else:
       print("User registration failed")
-    return confirmation
-
-  def generate_vmid(self):
-    return f"{self.uid}_{self.u_phone}"
 
   def charge_request(self, qrcode_path, charge_amount:int):
     send = {"QR_path": qrcode_path, "VMID": self.vmid, "PIN": self.u_pin, "amount": charge_amount}

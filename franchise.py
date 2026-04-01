@@ -25,6 +25,9 @@ class Franchise:
     else:
       print("Franchise validation failed")
 
+    # correction at end:
+    # confirmation() adds amount to f_balance regardless of whether the cable was successfully unlocked, which is slightly wrong logically (the balance update should be on the grid side, not the franchise side). Per the spec: "Grid Processing: funds are transferred to the Franchise." So balance update belongs in grid.add_block, not in franchise.confirmation. Remove self.f_balance += amount from confirmation().
+
   def display_qrcode(self, qrcode_file_name):
     img = Image.open(os.path.join("qrcodes", qrcode_file_name))
     self.qr_code = img
