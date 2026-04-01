@@ -1,26 +1,28 @@
+import sys
+
 from grid import Grid
 from franchise import Franchise
 from kiosk import Kiosk
 from user import User
 from tabulate import tabulate
 
-def print_users(grid):
-  print("\n--- USERS ---")
-  print(f"{'UID':<20} {'Name':<10} {'Phone':<12} {'Balance':<10}")
-  for u in grid.users.values():
-    print(f"{u.uid:<20} {u.u_name:<10} {u.u_phone:<12} {u.u_balance:<10}")
+# def print_users(grid):
+#   print("\n--- USERS ---")
+#   print(f"{'UID':<20} {'Name':<10} {'Phone':<12} {'Balance':<10}")
+#   for u in grid.users.values():
+#     print(f"{u.uid:<20} {u.u_name:<10} {u.u_phone:<12} {u.u_balance:<10}")
 
-def print_franchises(grid):
-  print("\n--- FRANCHISES ---")
-  print(f"{'FID':<20} {'Name':<10} {'Zone':<5} {'Balance':<10}")
-  for f in grid.franchises.values():
-    print(f"{f.fid:<20} {f.f_name:<10} {f.f_zone_code:<5} {f.f_balance:<10}")
+# def print_franchises(grid):
+#   print("\n--- FRANCHISES ---")
+#   print(f"{'FID':<20} {'Name':<10} {'Zone':<5} {'Balance':<10}")
+#   for f in grid.franchises.values():
+#     print(f"{f.fid:<20} {f.f_name:<10} {f.f_zone_code:<5} {f.f_balance:<10}")
 
-def print_blockchain(grid):
-  print("\n--- BLOCKCHAIN ---")
-  print(f"{'TxnID':<20} {'UID':<20} {'FID':<20} {'Amount':<10}")
-  for b in grid.blockchain:
-    print(f"{b['txn_id'][:16]:<20} {b['uid']:<20} {b['fid']:<20} {b['amount']:<10}")
+# def print_blockchain(grid):
+#   print("\n--- BLOCKCHAIN ---")
+#   print(f"{'TxnID':<20} {'UID':<20} {'FID':<20} {'Amount':<10}")
+#   for b in grid.blockchain:
+#     print(f"{b['txn_id'][:16]:<20} {b['uid']:<20} {b['fid']:<20} {b['amount']:<10}")
 
 def display_users(grid):
   table = []
@@ -70,11 +72,11 @@ if __name__ == "__main__":
   kiosk.process_payment(f"qrcode_xxxxxx{fr.vfid[-6:]}.png", fr.fid, user.vmid, "1234", 100)
 
   # Call printers
-  print_users(grid)
+  # print_users(grid)
   display_users(grid)
 
-  print_franchises(grid)
+  # print_franchises(grid)
   display_franchises(grid)
 
-  print_blockchain(grid)
+  # print_blockchain(grid)
   display_blockchain(grid)

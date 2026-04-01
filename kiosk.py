@@ -3,7 +3,7 @@ import os
 import datetime
 import hashlib
 import qrcode
-from ascon_lwc import ascon_encrypt, ascon_decrypt
+from ascon_lwc import ascon_decrypt
 # from pyzbar.pyzbar import decode
 import cv2
 from PIL import Image
@@ -15,29 +15,19 @@ class Kiosk:
   def __init__(self, grid, franchise):
     self.grid = grid
     self.franchise = franchise
+    self.timestamp = None
 
   def generate_qrcode(self):
     # hashed_fid - data to encode in the QR code
     fid = self.franchise.fid
 
     self.timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
-    vfid, payload = self.grid.generate_vfid(fid, self.timestamp)
+    vfid = self.grid.generate_vfid(fid, self.timestamp)
     self.franchise.vfid = vfid
 
-    # hashed_vfid = self.grid.sha3_algo(vfid).upper()[:16]
-    # qr_data = f"{vfid}, {timestamp}"
-    qr_data = payload
+    qr_data = f"{vfid}, {self.timestamp}"
 
     # Generate the QR code image using the make() shortcut function
-    # qr = qrcode.QRCode(
-    #   version=1,
-    #   box_size=10,
-    #   border=5,
-    # )
-
-    # qr.add_data(hashed_vfid)
-    # qr.make(fit=True)
-    # img = qr.make_image(fill_color="black", back_color="white")
     qr = qrcode.make(qr_data)
 
     # Save Image
@@ -56,16 +46,14 @@ class Kiosk:
 
     img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
     detector = cv2.QRCodeDetector()
-    decoded_object, _, _ = detector.detectAndDecode(img)
+    decoded_qr_data, _, _ = detector.detectAndDecode(img)
 
-    print(decoded_object)
-    print(type(decoded_object))
+    # print(decoded_qr_data)
+    # print(type(decoded_qr_data))
 
-    if not decoded_object:
+    if not decoded_qr_data:
       print("QR decode failed")
       return None, None
-
-    payload = decoded_object
 
     # 2. extract the data
     # for obj in decoded_objects:
@@ -75,33 +63,40 @@ class Kiosk:
 
     # Step 2: Split VFID and timestamp
     try:
-      vfid_hex, nonce_hex = decoded_object.split(", ")
-      nonce = bytes.fromhex(nonce_hex)
-      vfid = bytes.fromhex(vfid_hex)
+      parts = decoded_qr_data.split(", ")
+      if len(parts) != 2:
+        print("Invalid QR format, line 68")
+        return None, None
+
+      vfid_hex = parts[0].strip()
+      ts = parts[1].strip()
+
+      vfid_from_decoded_qr = bytes.fromhex(vfid_hex).upper()
+
     except:
       print("Invalid QR format")
       return None, None
 
     try:
-      # NOTE: To "verify", you must re-hash known data and check if the hashes match.
+      if (ts == self.timestamp):
+        # NOTE: To "verify", you must re-hash known data and check if the hashes match.
 
-      key = b"RaksAditPriyVeda"
-      # nonce = timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
-      # nonce - number used once; ensures same input != same output and prevents replay attacks
-      ad = self.timestamp.encode("utf-8").upper()
+        key = b"RaksAditPriyVeda"
+        nonce = self.timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+        # nonce - number used once; ensures same input != same output and prevents replay attacks
+        ad = self.timestamp.encode("utf-8").upper()
 
-      # step: Decrypt
-      # print(vfid)
-      # print(type(vfid))
-      pt = ascon_decrypt(key, nonce, ad, vfid)
-      # print("92")
-      fid = pt.decode()
-      # print("94")
+        # step: Decrypt
+        pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
+        fid = pt.decode()
 
-      if (fid == self.franchise.fid):
-        return True, fid # placeholder
+        if (fid == self.franchise.fid):
+          return True, fid # placeholder
+        else:
+          raise Exception("FIDs don't match")
+          return False, None # placeholder
       else:
-        return False, None # placeholder
+        raise Exception("Timestamps don't match")
 
     except Exception as e:
       print(f"{e}")
