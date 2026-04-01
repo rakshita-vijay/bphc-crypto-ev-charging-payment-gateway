@@ -3,7 +3,7 @@ import os
 import datetime
 import hashlib
 import qrcode
-from ascon_lwc import ascon_encrypt
+from ascon_lwc import ascon_encrypt, ascon_decrypt
 # from pyzbar.pyzbar import decode
 import cv2
 from PIL import Image
@@ -20,8 +20,8 @@ class Kiosk:
     # hashed_fid - data to encode in the QR code
     fid = self.franchise.fid
 
-    timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
-    vfid, payload = self.grid.generate_vfid(fid, timestamp)
+    self.timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+    vfid, payload = self.grid.generate_vfid(fid, self.timestamp)
     self.franchise.vfid = vfid
 
     # hashed_vfid = self.grid.sha3_algo(vfid).upper()[:16]
@@ -88,7 +88,7 @@ class Kiosk:
       key = b"RaksAditPriyVeda"
       # nonce = timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
       # nonce - number used once; ensures same input != same output and prevents replay attacks
-      ad = timestamp.encode("utf-8").upper()
+      ad = self.timestamp.encode("utf-8").upper()
 
       # step: Decrypt
       # print(vfid)
@@ -104,6 +104,7 @@ class Kiosk:
         return False, None # placeholder
 
     except Exception as e:
+      print(f"{e}")
       print("Decryption failed --> tampered QR")
       return None, None
 
