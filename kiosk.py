@@ -71,6 +71,10 @@ class Kiosk:
       vfid_hex = parts[0].strip()
       ts = parts[1].strip()
 
+      # print("Original vfid (first 10 bytes):", self.franchise.vfid[:20])
+      # print("Decoded vfid (first 10 bytes):", vfid_hex[:20])
+      # print(self.franchise.vfid == vfid_hex)
+
       vfid_from_decoded_qr = bytes.fromhex(vfid_hex)
 
     except:
