@@ -13,28 +13,28 @@ class Grid:
   def sha3_algo(self, message):
     # can we just import it? or should we code it out?
     try:
-      return hashlib.sha3_256(message.encode("utf-8")).hexdigest().upper()
+      return hashlib.sha3_256(message.encode("utf-8")).hexdigest()
     except:
       return "Could not hash"
     # this returns hex code
 
   def generate_fid(self, f_name, f_time_acc_create, f_pwd):
     message = f"{f_name}, {f_time_acc_create}, {f_pwd}"
-    return self.sha3_algo(message).upper()[:16]
+    return self.sha3_algo(message)[:16]
     # fid - unique to every station and shouldn’t be shared
 
   def generate_vfid(self, fid, timestamp):
     # implement using lwc algo, below is placeholder
     key = b"RaksAditPriyVeda"
-    nonce = timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+    nonce = timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
     # nonce - number used once; ensures same input != same output and prevents replay attacks
-    pt = fid.encode("utf-8").upper() # actua data to protect
-    ad = timestamp.encode("utf-8").upper()
+    pt = fid.encode("utf-8") # actua data to protect
+    ad = timestamp.encode("utf-8")
     # associated data is: data that is NOT encrypted, but is authenticated
     # timestamp is not hidden but cannot be tampered with
     vfid = ascon_encrypt(key, nonce, ad, pt)
 
-    return vfid.hex().upper()
+    return vfid.hex()
 
   def req_fran_validation(self, f_obj = None):
     # if f_obj.f_zone_code in self.zones and (f_obj.f_name != None and f_obj.f_pwd != None and f_obj.f_balance != None and f_obj.f_time_acc_create != None):
@@ -63,7 +63,7 @@ class Grid:
 
   def register_user(self, user):
     message = f"{user.u_name}, {user.u_phone}, {user.u_pin}"
-    uid = self.sha3_algo(message).upper()[:16] # unique to every station and shouldn’t be shared
+    uid = self.sha3_algo(message)[:16] # unique to every station and shouldn’t be shared
     user.uid = uid
     user.vmid = f"{uid}_{user.u_phone}"
     user.grid = self

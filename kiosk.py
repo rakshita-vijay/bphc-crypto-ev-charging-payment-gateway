@@ -71,7 +71,7 @@ class Kiosk:
       vfid_hex = parts[0].strip()
       ts = parts[1].strip()
 
-      vfid_from_decoded_qr = bytes.fromhex(vfid_hex).upper()
+      vfid_from_decoded_qr = bytes.fromhex(vfid_hex)
 
     except:
       print("Invalid QR format")
@@ -82,9 +82,9 @@ class Kiosk:
         # NOTE: To "verify", you must re-hash known data and check if the hashes match.
 
         key = b"RaksAditPriyVeda"
-        nonce = self.timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+        nonce = self.timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
         # nonce - number used once; ensures same input != same output and prevents replay attacks
-        ad = self.timestamp.encode("utf-8").upper()
+        ad = self.timestamp.encode("utf-8")
 
         # step: Decrypt
         pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
