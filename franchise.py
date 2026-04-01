@@ -42,3 +42,4 @@ class Franchise:
 
   def unlock_charging_cable(self, flag):
     # implement this
+    pass

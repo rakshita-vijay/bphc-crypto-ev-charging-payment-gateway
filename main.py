@@ -55,7 +55,7 @@ def display_blockchain(grid):
 if __name__ == "__main__":
   grid = Grid()
   # Create user
-  user = User("Rakshita", "9999999999", "1234", 1000, grid)
+  user = User("Rakshita", 9999999999, "1234", grid, 1000)
 
   # Create franchise
   fr = Franchise("Station1", "ACC123", "Z1", "pass", 500, grid)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
   kiosk.generate_qrcode()
 
   # Simulate payment (use filename from QR generation)
-  kiosk.process_payment(f"qrcode_{fr.fid}.png", user.vmid, "1234", 100)
+  kiosk.process_payment(f"qrcode_xxxxxx{fr.vfid[-6:]}.png", fr.fid, user.vmid, "1234", 100)
 
   # Call printers
   print_users(grid)

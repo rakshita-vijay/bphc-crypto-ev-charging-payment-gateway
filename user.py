@@ -2,7 +2,7 @@ import hashlib
 import qrcode
 
 class User:
-  def __init__(self, u_name:str, u_phone:str, u_pin:int, grid, u_balance:int = 0):
+  def __init__(self, u_name:str, u_phone:int, u_pin:str, grid, u_balance = 0.0):
     self.u_name = u_name
     self.u_phone = u_phone
     self.u_pin = u_pin

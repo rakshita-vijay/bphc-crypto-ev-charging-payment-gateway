@@ -1,3 +1,4 @@
+import os
 import hashlib
 from ascon_lwc import ascon_encrypt
 
@@ -25,14 +26,17 @@ class Grid:
   def generate_vfid(self, fid, timestamp):
     # implement using lwc algo, below is placeholder
     key = b"RaksAditPriyVeda"
-    nonce = timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+    # nonce = timestamp.encode("utf-8").upper()[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+    nonce = os.urandom(16)
     # nonce - number used once; ensures same input != same output and prevents replay attacks
     pt = fid.encode("utf-8").upper() # actua data to protect
     ad = timestamp.encode("utf-8").upper()
     # associated data is: data that is NOT encrypted, but is authenticated
     # timestamp is not hidden but cannot be tampered with
-    vfid = ascon_encrypt(key, nonce, ad, pt, variant="Ascon-128")
-    return vfid.hex().upper()
+    vfid = ascon_encrypt(key, nonce, ad, pt)
+
+    payload = vfid.hex() + ", " + nonce.hex()
+    return vfid.hex().upper(), payload
 
   def req_fran_validation(self, f_obj = None):
     # if f_obj.f_zone_code in self.zones and (f_obj.f_name != None and f_obj.f_pwd != None and f_obj.f_balance != None and f_obj.f_time_acc_create != None):
