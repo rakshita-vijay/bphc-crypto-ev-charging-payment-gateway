@@ -22,7 +22,7 @@ from tabulate import tabulate
 #   print("\n--- BLOCKCHAIN ---")
 #   print(f"{'TxnID':<20} {'UID':<20} {'FID':<20} {'Amount':<10}")
 #   for b in grid.blockchain:
-#     print(f"{b['txn_id'][:16]:<20} {b['uid']:<20} {b['fid']:<20} {b['amount']:<10}")
+#     print(f"{b['transaction_id'][:16]:<20} {b['uid']:<20} {b['fid']:<20} {b['amount']:<10}")
 
 def display_users(grid):
   table = []
@@ -44,11 +44,11 @@ def display_blockchain(grid):
   table = []
   for b in grid.blockchain:
     table.append([
-      b["txn_id"][:16],
+      b["transaction_id"][:16],
       b["uid"],
       b["fid"],
       b["amount"],
-      b["refund_flag"]
+      b["dispute_flag"]
     ])
 
   print("\n--- BLOCKCHAIN ---")

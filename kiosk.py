@@ -98,7 +98,7 @@ class Kiosk:
           return True, fid # placeholder
         else:
           raise Exception("FIDs don't match")
-          return False, None # placeholder
+          # return False, None # placeholder
       else:
         raise Exception("Timestamps don't match")
 
@@ -108,6 +108,19 @@ class Kiosk:
       return None, None
 
   def process_payment(self, qrcode_file_name, fid, vmid, pin, amount):
+    """
+    Full payment flow:
+      1. Verify QR code authenticity via ASCON decryption.
+      2. Decrypt VMID and PIN from the RSA-encrypted payload.
+      3. Forward auth request to the Grid.
+      4. Attempt to unlock the charging cable.
+      5. If cable unlock fails after a successful payment → trigger refund.
+
+    Edge cases handled:
+      - Invalid / tampered QR → reject immediately.
+      - Grid rejects (bad PIN / balance / VMID) → inform franchise.
+      - Payment approved but hardware fails → call add_reverse_block.
+    """
     confirmation, fid_from_decrypt = self.decrypt_qrcode(qrcode_file_name)
     if (confirmation == True and fid_from_decrypt == fid):
       success = self.grid.validate_transaction(fid, vmid, pin, amount)

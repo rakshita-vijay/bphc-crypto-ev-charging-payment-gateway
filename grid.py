@@ -1,4 +1,5 @@
 import os
+import datetime
 import hashlib
 from ascon_lwc import ascon_encrypt
 
@@ -72,6 +73,7 @@ class Grid:
 
   def validate_transaction(self, fid, vmid, pin, amount):
     if fid not in self.franchises:
+      print("FID not found in franchises")
       return False
 
     for user in self.users.values():
@@ -79,12 +81,54 @@ class Grid:
         if user.u_balance >= amount:
           user.u_balance -= amount
           # self.franchises[fid].f_balance += amount
-          self.add_block(user.uid, fid, amount)
+
+          ts = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+          bl = self.add_block(user.uid, fid, ts, amount)
+          if (bl == None):
+            printf(f"Block of FID {fid} representing a successful transaction could not be added to blockchain")
+            return False
           return True
     return False
 
-  def add_block(self, uid, fid, amount):
-    pass
+  def add_block(self, uid, fid, timestamp, amount, dispute = False): # disp_flag : T for a refund block
+    try:
+      t_id_msg = f"{uid}, {fid}, {timestamp}, {amount}"
+      prev_hash = self.blockchain[-1]["transaction_id"] if len(self.blockchain) > 0 else ("0" * 64)
+      block = {
+                "transaction_id" : self.sha3_algo(t_id_msg),
+                "prev_bl_hash" : prev_hash,
+                "timestamp" : timestamp,
+                "uid" : uid,
+                "fid" : fid,
+                "amount" : amount,
+                "dispute_flag" : dispute
+              }
+      self.blockchain.append(block)
+      x = "successful transaction" if dispute == False else "refund"
+      print(f"Block of FID {fid} representing a {x} added to blockchain")
+      return block
+    except:
+      return None
 
-def add_reverse_block(self, uid, fid, amount):
-    pass
+  def process_refund(self, uid, fid, amount):
+    if fid not in self.franchises:
+      print("FID not found in franchises")
+      return None
+
+    for user in self.users.values():
+      if user.uid == uid:
+        user.u_balance += amount
+        self.franchises[fid].f_balance -= amount
+        ts = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+        return ts
+
+    return None
+
+  def add_reverse_block(self, uid, fid, amount, dispute = True):
+    # called when payment succeeds but hardware fails to dispense power. reverses the balance and records a dispute block.
+    ts = self.process_refund(uid, fid, amount)
+    if ts is None:
+      print("Refund failed - either FID or user not found")
+      return None
+
+    return self.add_block(uid, fid, ts, amount, True)

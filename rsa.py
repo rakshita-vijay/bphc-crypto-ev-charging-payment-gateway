@@ -22,8 +22,8 @@ def modInverse(e, phi):
 
 # RSA Key Generation
 def generateKeys():
-  p = 7919
-  q = 1009
+  p = 7919 # or 4563413
+  q = 1009 # or 3457631
   n = p * q
   phi = (p - 1) * (q - 1)
 
