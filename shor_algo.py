@@ -59,7 +59,7 @@ def demonstrate_attack():
   e, N = public_key
 
   print(f"RSA Public Key: e={e}, N={N}")
-  print(f"Attacker only knows N={N}, attempting to factor it...")
+  print(f"Attacker only knows N={N}. Attempting to factor it,")
 
   result = shor_algorithm(N)
 
