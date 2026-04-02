@@ -3,10 +3,13 @@ import os
 import datetime
 import hashlib
 import qrcode
-from ascon_lwc import ascon_decrypt
-# from pyzbar.pyzbar import decode
 import cv2
 from PIL import Image
+
+from ascon_lwc import ascon_decrypt
+# from pyzbar.pyzbar import decode
+
+import shor_algo
 
 # from grid import Grid
 # from franchise import Franchise
@@ -107,8 +110,11 @@ class Kiosk:
       print("Decryption failed --> tampered QR")
       return None, None
 
-  def process_payment(self, qrcode_file_name, fid, vmid, pin, amount):
+  def process_payment(self, qrcode_file_name, uid, fid, payload, amount):
+    # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt
     """
+    TO IMPLEMENT:
+
     Full payment flow:
       1. Verify QR code authenticity via ASCON decryption.
       2. Decrypt VMID and PIN from the RSA-encrypted payload.
@@ -122,8 +128,12 @@ class Kiosk:
       - Payment approved but hardware fails → call add_reverse_block.
     """
     confirmation, fid_from_decrypt = self.decrypt_qrcode(qrcode_file_name)
-    if (confirmation == True and fid_from_decrypt == fid):
-      success = self.grid.validate_transaction(fid, vmid, pin, amount)
-      self.franchise.confirmation(success, amount)
-    else:
+
+    if (confirmation == False):
       print("Payment failed due to invalid QR")
+
+    else if (confirmation == True and fid_from_decrypt == fid):
+      success = self.grid.validate_transaction(fid, vmid, pin, amount)
+      status = self.franchise.confirmation(success, amount)
+      if (status == False):
+        self.grid.add_reverse_block(uid, fid, amount)

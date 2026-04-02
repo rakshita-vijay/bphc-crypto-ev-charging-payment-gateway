@@ -14,27 +14,29 @@ def power(base, expo, m):
 # Function to find modular inverse of e modulo phi(n)
 # Here we are calculating phi(n) using Hit and Trial Method
 # but we can optimize it using Extended Euclidean Algorithm
-def modInverse(e, phi):
-  for d in range(2, phi):
-    if (e * d) % phi == 1:
-      return d
-  return -1
+# def modInverse(e, phi):
+#   for d in range(2, phi):
+#     if (e * d) % phi == 1:
+#       return d
+#   return -1
 
 # RSA Key Generation
-def generateKeys():
+def generate_keys():
   p = 7919 # or 4563413
   q = 1009 # or 3457631
   n = p * q
   phi = (p - 1) * (q - 1)
 
   # Choose e, where 1 < e < phi(n) and gcd(e, phi(n)) == 1
-  e = 0
-  for e in range(2, phi):
-    if gcd(e, phi) == 1:
-      break
+  # e = 0
+  # for e in range(2, phi):
+  #   if gcd(e, phi) == 1:
+  #     break
+  e = 65537               # standard public exponent — always coprime with phi here
 
   # Compute d such that e * d ≡ 1 (mod phi(n))
-  d = modInverse(e, phi)
+  # d = modInverse(e, phi)
+  d = pow(e, -1, phi)
 
   return e, d, n
 
