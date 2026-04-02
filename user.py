@@ -1,5 +1,4 @@
 import hashlib
-import qrcode
 
 import rsa
 
@@ -42,8 +41,8 @@ class User:
     """
     rsa_e, _rsa_d, rsa_n = rsa.generate_keys()
     payload = {"QR_path": qrcode_path,
-            "VMID_enc": self.vmid, # encrypt this using rsa - should be changed to accommodate strings, then used here
-            "PIN_enc": self.u_pin, # encrypt this using rsa - should be changed to accommodate strings, then used here
+            "VMID_enc": [rsa.encrypt(ord(c), rsa_e, rsa_n) for c in self.vmid],
+            "PIN_enc": rsa.encrypt(int(self.u_pin), rsa_e, rsa_n),
             "amount": charge_amount,
             "rsa_e": rsa_e,
             "rsa_n": rsa_n,

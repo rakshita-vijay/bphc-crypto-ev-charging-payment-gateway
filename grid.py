@@ -85,7 +85,7 @@ class Grid:
           ts = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
           bl = self.add_block(user.uid, fid, ts, amount)
           if (bl == None):
-            printf(f"Block of FID {fid} representing a successful transaction could not be added to blockchain")
+            print(f"Block of FID {fid} representing a successful transaction could not be added to blockchain")
             return False
           return True
     return False

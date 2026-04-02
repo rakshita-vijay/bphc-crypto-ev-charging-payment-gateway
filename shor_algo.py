@@ -19,7 +19,7 @@ def shor_algorithm(n):
   if n % 2 == 0:
     return 2, n // 2
 
-  #Giving n retries to factorize, a retry will fail if we can't find a valid period
+  #Giving 10 retries to factorize, a retry will fail if we can't find a valid period
   for attempt in range(10):
     a = random.randint(2, n-1)
 
@@ -40,3 +40,42 @@ def shor_algorithm(n):
       return factor1, factor2
 
   return None
+
+def generate_rsa_keypair():
+  #Generate the keypair, but with small values of p and q.
+  #The keypair is intentionally weak to demonstrate Shor's algo
+  p, q = 61, 53 #random small primes for now
+  N = p * q
+  e = 17
+  phi = (p-1) * (q-1)
+  d = pow(e, -1, phi)
+
+  public_keypair = (e, N)
+  private_keypair = (d, N)
+  return public_keypair, private_keypair, p, q
+
+def demonstrate_attack():
+  public_key, private_key, original_p, original_q = generate_rsa_keypair()
+  e, N = public_key
+
+  print(f"RSA Public Key: e={e}, N={N}")
+  print(f"Attacker only knows N={N}, attempting to factor it...")
+
+  result = shor_algorithm(N)
+
+  if result:
+    found_p, found_q = result
+    print(f"Shor's algorithm recovered factors: p={found_p}, q={found_q}")
+    print(f"Original factors were:              p={original_p}, q={original_q}")
+
+    # Reconstruct private key from broken factors
+    phi = (found_p - 1) * (found_q - 1)
+    recovered_d = pow(e, -1, phi)
+    print(f"Private key recovered: d={recovered_d}")
+    print(f"Original private key:  d={private_key[0]}")
+    print("RSA encryption is BROKEN for this key.")
+  else:
+    print("Factoring failed.")
+
+if __name__ == "__main__":
+  demonstrate_attack()

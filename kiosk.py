@@ -10,7 +10,7 @@ from ascon_lwc import ascon_decrypt
 # from pyzbar.pyzbar import decode
 
 import shor_algo
-
+import rsa
 # from grid import Grid
 # from franchise import Franchise
 
@@ -132,7 +132,8 @@ class Kiosk:
     if (confirmation == False):
       print("Payment failed due to invalid QR")
 
-    else if (confirmation == True and fid_from_decrypt == fid):
+    elif (confirmation == True and fid_from_decrypt == fid):
+      
       success = self.grid.validate_transaction(fid, vmid, pin, amount)
       status = self.franchise.confirmation(success, amount)
       if (status == False):
