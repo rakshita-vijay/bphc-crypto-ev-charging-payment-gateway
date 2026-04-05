@@ -36,6 +36,7 @@ class Franchise:
   def confirmation(self, success, amount = 0):
     if success:
       # self.f_balance += amount
+      print(f"Transaction for {self.f_name} accepted.")
       status = self.unlock_charging_cable(1)
       return status
     else:

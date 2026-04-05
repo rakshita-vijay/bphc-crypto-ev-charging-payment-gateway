@@ -133,8 +133,9 @@ class Kiosk:
       print("Payment failed due to invalid QR")
 
     elif (confirmation == True and fid_from_decrypt == fid):
-      
+      vmid = "".join(chr(rsa.decrypt(n, payload["_rsa_d"], payload["rsa_n"])) for n in payload["VMID_enc"])
+      pin = str(rsa.decrypt(payload["PIN_enc"], payload["_rsa_d"], payload["rsa_n"]))
       success = self.grid.validate_transaction(fid, vmid, pin, amount)
       status = self.franchise.confirmation(success, amount)
-      if (status == False):
+      if (success and status == False):
         self.grid.add_reverse_block(uid, fid, amount)
