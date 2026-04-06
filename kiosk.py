@@ -110,7 +110,7 @@ class Kiosk:
       print("Decryption failed --> tampered QR")
       return None, None
 
-  def process_payment(self, qrcode_file_name, uid, fid, payload):
+  def process_payment(self, qrcode_file_name, uid, fid, payload, amount):
     # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt
     """
     TO IMPLEMENT:
@@ -135,8 +135,8 @@ class Kiosk:
       return
 
     elif (confirmation == True and fid_from_decrypt == fid):
-      vmid = rsa.decrypt_string(payload["VMID_enc"], rsa_d, rsa_n)
-      pin = rsa.decrypt_string(payload["PIN_enc"],  rsa_d, rsa_n)
+      vmid = rsa.decrypt_string(payload["VMID_enc"], payload["_rsa_d"], payload["rsa_n"])
+      pin = rsa.decrypt_string(payload["PIN_enc"], payload["_rsa_d"], payload["rsa_n"])
 
       success = self.grid.validate_transaction(fid, vmid, pin, payload["amount"])
       status = self.franchise.confirmation(success, payload["amount"])

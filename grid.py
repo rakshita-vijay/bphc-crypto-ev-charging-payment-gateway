@@ -12,7 +12,7 @@ class Grid:
     self.blockchain = [] # block dicts
 
   def sha3_algo(self, message):
-    # can we just import it? or should we code it out?
+    # can we just import it? or should we code it out? - importing. DONE
     try:
       return hashlib.sha3_256(message.encode("utf-8")).hexdigest()
     except:
@@ -38,8 +38,6 @@ class Grid:
     return vfid.hex()
 
   def req_fran_validation(self, f_obj = None):
-    # if f_obj.f_zone_code in self.zones and (f_obj.f_name != None and f_obj.f_pwd != None and f_obj.f_balance != None and f_obj.f_time_acc_create != None):
-
     req_fields = [f_obj.f_name, f_obj.f_pwd, f_obj.f_balance, f_obj.f_time_acc_create]
 
     if f_obj.f_zone_code in self.zones and all(x is not None for x in req_fields):

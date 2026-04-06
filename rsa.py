@@ -3,24 +3,9 @@ import json
 # Python Program for implementation of RSA Algorithm
 # From: https://www.geeksforgeeks.org/computer-networks/rsa-algorithm-cryptography/
 
-# def power(base, expo, m):
-#   res = 1
-#   base = base % m
-#   while expo > 0:
-#     if expo & 1:
-#       res = (res * base) % m
-#     base = (base * base) % m
-#     expo = expo // 2
-#   return res
-
 # Function to find modular inverse of e modulo phi(n)
 # Here we are calculating phi(n) using Hit and Trial Method
 # but we can optimize it using Extended Euclidean Algorithm
-# def modInverse(e, phi):
-#   for d in range(2, phi):
-#     if (e * d) % phi == 1:
-#       return d
-#   return -1
 
 # RSA Key Generation
 def generate_keys():
@@ -41,12 +26,6 @@ def generate_keys():
   d = pow(e, -1, phi)
 
   return e, d, n
-
-# Function to calculate gcd
-# def gcd(a, b):
-#   while b != 0:
-#     a, b = b, a % b
-#   return a
 
 # # Encrypt message using public key (e, n)
 # def encrypt(m, e, n):
