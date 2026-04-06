@@ -1,0 +1,7 @@
+grid line 91 onwards
+franchise line 21 & 36 & 46 just the function
+kiosk line 43 (huge ass function) & 113 (work on pls pls) 
+user line 24 (work on it pls pls) and all user functions what even
+rsa encryption check
+shor's incroporate to work on integers, characters, 
+grid, franchise, kiosk, and user data needs to be stored on firebase.
