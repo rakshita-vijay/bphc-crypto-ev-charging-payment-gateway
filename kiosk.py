@@ -110,7 +110,7 @@ class Kiosk:
       print("Decryption failed --> tampered QR")
       return None, None
 
-  def process_payment(self, qrcode_file_name, uid, fid, payload, amount):
+  def process_payment(self, qrcode_file_name, uid, fid, payload):
     # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt
     """
     TO IMPLEMENT:
@@ -129,13 +129,16 @@ class Kiosk:
     """
     confirmation, fid_from_decrypt = self.decrypt_qrcode(qrcode_file_name)
 
-    if (confirmation == False):
+    if (confirmation == False or fid_from_decrypt != fid):
       print("Payment failed due to invalid QR")
+      self.franchise.confirmation(False)
+      return
 
     elif (confirmation == True and fid_from_decrypt == fid):
-      vmid = "".join(chr(rsa.decrypt(n, payload["_rsa_d"], payload["rsa_n"])) for n in payload["VMID_enc"])
-      pin = str(rsa.decrypt(payload["PIN_enc"], payload["_rsa_d"], payload["rsa_n"]))
-      success = self.grid.validate_transaction(fid, vmid, pin, amount)
-      status = self.franchise.confirmation(success, amount)
+      vmid = rsa.decrypt_string(payload["VMID_enc"], rsa_d, rsa_n)
+      pin = rsa.decrypt_string(payload["PIN_enc"],  rsa_d, rsa_n)
+
+      success = self.grid.validate_transaction(fid, vmid, pin, payload["amount"])
+      status = self.franchise.confirmation(success, payload["amount"])
       if (success and status == False):
-        self.grid.add_reverse_block(uid, fid, amount)
+        self.grid.add_reverse_block(uid, fid, payload["amount"])
