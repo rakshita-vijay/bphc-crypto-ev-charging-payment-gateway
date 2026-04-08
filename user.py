@@ -3,11 +3,12 @@ import hashlib
 import rsa
 
 class User:
-  def __init__(self, u_name:str, u_phone:int, u_pin:str, grid, u_balance = 0.0):
+  def __init__(self, u_name:str, u_phone:int, u_pin:str, u_zone_code, grid, u_balance = 0.0):
     self.u_name = u_name
     self.u_phone = u_phone
     self.u_pin = u_pin
     self.u_balance = u_balance
+    self.u_zone_code = u_zone_code
     self.grid = grid
 
     self.uid = None
@@ -48,6 +49,79 @@ class User:
             "rsa_n": rsa_n,
             "_rsa_d": _rsa_d}
     return payload
+
+  def decrypt_qrcode(self, qrcode_data = None):
+    # and verify hash???
+
+    # 1. load and decode the qr code
+    # img = Image.open(os.path.join("qrcodes", qrcode_file_name))
+    # decoded_objects = decode(img)
+
+    """
+    img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
+    detector = cv2.QRCodeDetector()
+    decoded_qr_data, _, _ = detector.detectAndDecode(img)
+    """
+
+    # print(decoded_qr_data)
+    # print(type(decoded_qr_data))
+
+    if not qrcode_data:
+      print("QR data is None - failed")
+      return None, None
+
+    # 2. extract the data
+    # for obj in decoded_objects:
+    #   scanned_hash = obj.data.decode('utf-8')
+    #   print(f"Scanned Hash: {scanned_hash}")
+    # data = decoded_object.decode('utf-8')
+
+    # Step 2: Split VFID and timestamp
+    decoded_qr_data = qrcode_data
+    try:
+      parts = decoded_qr_data.split(", ")
+      if len(parts) != 2:
+        print("Invalid QR format, line 84")
+        return None, None
+
+      vfid_hex = parts[0].strip()
+      ts = parts[1].strip()
+
+      # print("Original vfid (first 10 bytes):", self.franchise.vfid[:20])
+      # print("Decoded vfid (first 10 bytes):", vfid_hex[:20])
+      # print(self.franchise.vfid == vfid_hex)
+
+      vfid_from_decoded_qr = bytes.fromhex(vfid_hex)
+
+    except:
+      print("Invalid QR format, line 97")
+      return None, None
+
+    try:
+      if (ts == self.timestamp):
+        # NOTE: To "verify", you must re-hash known data and check if the hashes match.
+
+        key = b"RaksAditPriyVeda"
+        nonce = self.timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+        # nonce - number used once; ensures same input != same output and prevents replay attacks
+        ad = self.timestamp.encode("utf-8")
+
+        # step: Decrypt
+        pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
+        fid = pt.decode()
+
+        if (fid == self.franchise.fid):
+          return True, fid # placeholder
+        else:
+          raise Exception("FIDs don't match")
+          # return False, None # placeholder
+      else:
+        raise Exception("Timestamps don't match")
+
+    except Exception as e:
+      print(f"{e}")
+      print("Decryption failed --> tampered QR")
+      return None, None
 
 if __name__ == "__main__":
   from grid      import Grid

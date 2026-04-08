@@ -6,7 +6,9 @@ from ascon_lwc import ascon_encrypt
 class Grid:
   def __init__(self):
     self.providers = ["Tata", "Adani", "ChargePoint"]
-    self.zones = {"Z1": "Tata", "Z2": "Adani", "Z3": "ChargePoint"} # f_zone_code, provder_name
+    self.zones = {"Z1": "Tata", "Z2": "Tata", "Z3": "Tata", # f_zone_code, provider_name
+                  "Z4": "Adani", "Z5": "Adani", "Z6": "Adani",
+                  "Z7": "ChargePoint", "Z8": "ChargePoint", "Z9": "ChargePoint"}
     self.users = {} # uid, user_obj
     self.franchises = {} # fid, fran_obj
     self.blockchain = [] # block dicts
@@ -56,7 +58,7 @@ class Grid:
   def register_franchise(self, franchise):
     fid = self.generate_fid(franchise.f_name, franchise.f_time_acc_create, franchise.f_pwd)
     franchise.fid = fid
-    franchise.grid = self
+    # franchise.grid = self
     self.franchises[franchise.fid] = franchise
     return True
 
@@ -65,7 +67,7 @@ class Grid:
     uid = self.sha3_algo(message)[:16] # unique to every station and shouldn’t be shared
     user.uid = uid
     user.vmid = f"{uid}_{user.u_phone}"
-    user.grid = self
+    # user.grid = self
     self.users[user.uid] = user
     return True
 

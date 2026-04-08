@@ -40,6 +40,7 @@ class Kiosk:
     print(f"QR code generated and saved as qrcode_xxxxxx{vfid[-6:]}.png in the folder 'qrcodes'")
     self.franchise.display_qrcode(f"qrcode_xxxxxx{vfid[-6:]}.png")
 
+  """
   def decrypt_qrcode(self, qrcode_file_name):
     # and verify hash???
 
@@ -109,6 +110,7 @@ class Kiosk:
       print(f"{e}")
       print("Decryption failed --> tampered QR")
       return None, None
+  """
 
   def process_payment(self, qrcode_file_name, uid, fid, payload, amount):
     # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt

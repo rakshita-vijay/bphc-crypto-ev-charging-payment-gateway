@@ -27,10 +27,10 @@ from tabulate import tabulate
 def display_users(grid):
   table = []
   for u in grid.users.values():
-    table.append([u.uid, u.u_name, u.u_phone, u.u_balance])
+    table.append([u.uid, u.u_name, u.u_phone, u.u_balance, u.grid])
 
   print("\n--- USERS ---")
-  print(tabulate(table, headers=["UID", "Name", "Phone", "Balance"], tablefmt="grid"))
+  print(tabulate(table, headers=["UID", "Name", "Phone", "Balance", "Grid"], tablefmt="grid"))
 
 def display_franchises(grid):
   table = []
@@ -57,7 +57,8 @@ def display_blockchain(grid):
 if __name__ == "__main__":
   grid = Grid()
   # Create user
-  user = User("Rakshita", 9999999999, "1234", grid, 1000)
+  user = User("Rakshita", 9999999999, "1234", "Z1", grid, 1000)
+  user2 = User("Rakshitaaaa", 1111, "123456", "Z1", grid, 1000)
 
   # Create franchise
   fr = Franchise("Station1", "ACC123", "Z1", "pass", 500, grid)

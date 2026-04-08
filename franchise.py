@@ -13,6 +13,7 @@ class Franchise:
     self.f_balance = f_balance
     self.f_time_acc_create = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
     self.grid = grid
+
     self.fid = None # done in grid, if validated - so no dangling fids are there
     self.req_validation_and_reg_w_grid()
     self.vfid = None # done in kiosk
