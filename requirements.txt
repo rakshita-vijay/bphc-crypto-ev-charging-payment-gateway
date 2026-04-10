@@ -3,3 +3,4 @@ qrcode
 ascon
 opencv-python
 tabulate
+streamlit>=1.28.0

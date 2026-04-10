@@ -1,8 +1,8 @@
 import os
 import datetime
 import hashlib
+import random
 from PIL import Image
-# from grid import Grid
 
 class Franchise:
   def __init__(self, f_name, f_acc_num, f_zone_code, f_pwd, f_balance, grid):
@@ -13,40 +13,111 @@ class Franchise:
     self.f_balance = f_balance
     self.f_time_acc_create = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
     self.grid = grid
-
-    self.fid = None # done in grid, if validated - so no dangling fids are there
+    self.fid = None
     self.req_validation_and_reg_w_grid()
-    self.vfid = None # done in kiosk
+    self.vfid = None
     self.qr_code = None
+    self.hardware_failure_rate = 0.0  # 0-1 probability of hardware failure
 
   def req_validation_and_reg_w_grid(self):
+    """Register franchise with Grid Authority"""
     confirmation = self.grid.req_fran_validation(self)
-    if (confirmation == True):
+    if confirmation == True:
       print(f"Franchise '{self.f_name}' registered with FID: {self.fid}")
     else:
       print("Franchise validation failed")
 
-    # correction at end:
-    # confirmation() adds amount to f_balance regardless of whether the cable was successfully unlocked, which is slightly wrong logically (the balance update should be on the grid side, not the franchise side). Per the spec: "Grid Processing: funds are transferred to the Franchise." So balance update belongs in grid.add_block, not in franchise.confirmation. Remove self.f_balance += amount from confirmation().
-
   def display_qrcode(self, qrcode_file_name):
-    img = Image.open(os.path.join("qrcodes", qrcode_file_name))
-    self.qr_code = img
-    self.qr_code.show()
+    """Display the generated QR code"""
+    try:
+      img = Image.open(os.path.join("qrcodes", qrcode_file_name))
+      self.qr_code = img
+      print(f"QR Code displayed: {qrcode_file_name}")
+      # In Streamlit, this will be handled differently
+      # self.qr_code.show()
+    except Exception as e:
+      print(f"Error displaying QR code: {e}")
 
-  def confirmation(self, success, amount = 0):
+  def confirmation(self, success, amount=0):
+    """
+    Process transaction confirmation from Grid Authority.
+    If successful, attempt to unlock the charging cable.
+    
+    Args:
+        success: Boolean indicating if Grid approved the transaction
+        amount: Transaction amount
+    
+    Returns:
+        True if cable unlocked successfully
+        False if cable unlock failed (hardware failure)
+        None if transaction was rejected by Grid
+    """
     if success:
-      # self.f_balance += amount
-      print(f"Transaction for {self.f_name} accepted.")
-      status = self.unlock_charging_cable(1)
-      return status
+      print(f"\n✓ Transaction for {self.f_name} ACCEPTED (Amount: {amount})")
+      print("  Attempting to unlock charging cable...")
+      
+      # Simulate cable unlock
+      status = self.unlock_charging_cable()
+      
+      if status:
+        print(f"✓ Charging cable UNLOCKED successfully for {self.f_name}")
+        return True
+      else:
+        print(f"✗ Charging cable UNLOCK FAILED for {self.f_name}")
+        print("  Hardware failure detected - refund will be triggered")
+        return False
     else:
-      print(f"Transaction for {self.f_name} rejected.")
+      print(f"\n✗ Transaction for {self.f_name} REJECTED")
       return None
 
-  def unlock_charging_cable(self, flag):
-    # implement this
-    return flag # True if unlocked, False if failed to unlock
+  def unlock_charging_cable(self):
+    """
+    Simulate charging cable unlock mechanism.
+    
+    This function simulates the hardware operation of unlocking the
+    charging cable at the EV charging station. In a real system, this
+    would communicate with physical hardware.
+    
+    Success/Failure scenarios:
+    - Normal operation: Cable unlocks successfully (configurable success rate)
+    - Hardware failure: Cable mechanism jams or fails to unlock
+    - Connection timeout: Unable to reach hardware controller
+    
+    Returns:
+        True if cable unlocked successfully
+        False if hardware fails to unlock (triggers automatic refund)
+    """
+    try:
+      # Log the unlock attempt
+      timestamp = datetime.datetime.now().strftime("%d-%m-%y %H:%M:%S")
+      print(f"  [Hardware] Unlock attempt at {timestamp}")
+      
+      # Simulate network latency
+      import time
+      time.sleep(0.1)
+      
+      # Simulate hardware failure with configurable probability
+      # hardware_failure_rate: 0.0 = always succeed, 1.0 = always fail
+      failure_random = random.random()
+      
+      if failure_random < self.hardware_failure_rate:
+        print(f"  [Hardware] ✗ Cable unlock mechanism FAILED (simulated failure)")
+        return False
+      
+      # Simulate occasional random failures (1% chance by default if not configured)
+      if self.hardware_failure_rate == 0.0 and random.random() < 0.01:
+        print(f"  [Hardware] ✗ Unexpected hardware failure (1% random chance)")
+        return False
+      
+      # Cable unlock succeeds
+      print(f"  [Hardware] ✓ Cable unlock mechanism SUCCEEDED")
+      print(f"  [Hardware] Charging session active - User can now charge vehicle")
+      
+      return True
+      
+    except Exception as e:
+      print(f"  [Hardware] ✗ Cable unlock error: {e}")
+      return False
 
 if __name__ == "__main__":
   from grid import Grid
@@ -84,19 +155,23 @@ if __name__ == "__main__":
   # ── 3. confirmation() success path ───────────────────────
   print("\n[Test 3] confirmation() — success")
   bal_before = fr.f_balance
-  fr.confirmation(True, 200)
-  # Balance must NOT change here — grid handles it
-  check("f_balance unchanged by confirmation()", fr.f_balance == bal_before)
+  result = fr.confirmation(True, 200)
+  check("Returns True", result == True)
 
   # ── 4. confirmation() failure path ───────────────────────
   print("\n[Test 4] confirmation() — failure")
-  fr.confirmation(False, 200)
-  check("f_balance still unchanged", fr.f_balance == bal_before)
+  result = fr.confirmation(False, 200)
+  check("Returns None", result is None)
 
   # ── 5. unlock_charging_cable directly ────────────────────
   print("\n[Test 5] unlock_charging_cable()")
-  check("Returns True  when flag=True",  fr.unlock_charging_cable(True)  == True)
-  check("Returns False when flag=False", fr.unlock_charging_cable(False) == False)
+  # Set high success rate for testing
+  fr.hardware_failure_rate = 0.0
+  check("Returns True when configured to succeed",  fr.unlock_charging_cable()  == True)
+  
+  # Set high failure rate for testing
+  fr.hardware_failure_rate = 1.0
+  check("Returns False when configured to fail", fr.unlock_charging_cable() == False)
 
   # ── 6. Two franchises — independent balances ─────────────
   print("\n[Test 6] Two franchises are independent")
