@@ -71,7 +71,8 @@ if __name__ == "__main__":
 
   # Simulate payment (use filename from QR generation)
   payload = user.charge_request(f"qrcode_xxxxxx{fr.vfid[-6:]}.png", 100)
-  kiosk.process_payment(f"qrcode_xxxxxx{fr.vfid[-6:]}.png", user.uid, fr.fid, payload, 100)
+  result = kiosk.process_payment(f"qrcode_xxxxxx{fr.vfid[-6:]}.png", user.uid, fr.fid, payload, 100)
+  print(result)
 
   # Call printers
   # print_users(grid)

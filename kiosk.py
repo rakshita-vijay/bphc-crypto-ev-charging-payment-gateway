@@ -39,7 +39,6 @@ class Kiosk:
     print(f"QR code generated and saved as qrcode_xxxxxx{vfid[-6:]}.png in the folder 'qrcodes'")
     self.franchise.display_qrcode(f"qrcode_xxxxxx{vfid[-6:]}.png")
 
-  """
   def decrypt_qrcode(self, qrcode_file_name):
     # and verify hash???
 
@@ -109,9 +108,8 @@ class Kiosk:
       print(f"{e}")
       print("Decryption failed --> tampered QR")
       return None, None
-  """
 
-  def process_payment(self, qrcode_file_name, uid, fid, payload, amount):
+  def process_payment(self, qrcode_file_name, payload):
     # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt
     """
     TO IMPLEMENT:
@@ -145,6 +143,18 @@ class Kiosk:
       if (success and status == False):
         self.grid.add_reverse_block(uid, fid, payload["amount"])
     '''
+    if payload is None:
+      print("[Kiosk] Payment aborted — no payload (QR scan failed).")
+      self.franchise.confirmation(False, 0)
+      return {
+        "success": False,
+        "reason": "No payload exists",
+        "transaction_id": None
+      }
+
+    fid = self.franchise.fid
+    amount = payload["amount"]
+
     # Step 1: Verify QR Code Authenticity
     print("\n[Step 1] Verifying QR Code...")
     confirmation, fid_from_decrypt = self.decrypt_qrcode(qrcode_file_name)
@@ -200,6 +210,17 @@ class Kiosk:
       print("  Triggering automatic refund...")
 
       # Step 5: Handle hardware failure - trigger refund
+      uid = None
+      for u_id, user in self.grid.users.items():
+        if user.vmid == vmid:
+          uid = u_id
+
+      if not uid:
+        return {
+          "success": False,
+          "reason": "UID not found",
+          "transaction_id": None
+        }
       refund_block = self.grid.add_reverse_block(uid, fid, payload["amount"])
 
       if refund_block is not None:

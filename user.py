@@ -50,23 +50,26 @@ class User:
             "_rsa_d": _rsa_d}
     return payload
 
-  def decrypt_qrcode(self, qrcode_data = None):
+  '''
+  def decrypt_qrcode(self, qrcode_file_name = None):
     # and verify hash???
 
     # 1. load and decode the qr code
     # img = Image.open(os.path.join("qrcodes", qrcode_file_name))
     # decoded_objects = decode(img)
 
-    """
+    if not qrcode_file_name:
+      print("QR file name is None - failed")
+      return None, None
+
     img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
     detector = cv2.QRCodeDetector()
     decoded_qr_data, _, _ = detector.detectAndDecode(img)
-    """
 
     # print(decoded_qr_data)
     # print(type(decoded_qr_data))
 
-    if not qrcode_data:
+    if not decoded_qr_data:
       print("QR data is None - failed")
       return None, None
 
@@ -77,7 +80,6 @@ class User:
     # data = decoded_object.decode('utf-8')
 
     # Step 2: Split VFID and timestamp
-    decoded_qr_data = qrcode_data
     try:
       parts = decoded_qr_data.split(", ")
       if len(parts) != 2:
@@ -122,6 +124,7 @@ class User:
       print(f"{e}")
       print("Decryption failed --> tampered QR")
       return None, None
+  '''
 
 if __name__ == "__main__":
   from grid      import Grid
