@@ -2,6 +2,7 @@ import os
 import datetime
 import hashlib
 from ascon_lwc import ascon_encrypt
+import json
 
 class Grid:
   def __init__(self):
@@ -90,6 +91,20 @@ class Grid:
           return True
     return False
 
+  # Add to grid.py
+  def save_blockchain(self):
+      import json
+      with open("blockchain_ledger.json", "w") as f:
+          json.dump(self.blockchain, f, indent=2)
+
+  def load_blockchain(self):
+      import json
+      try:
+          with open("blockchain_ledger.json", "r") as f:
+              self.blockchain = json.load(f)
+      except FileNotFoundError:
+          self.blockchain = []
+
   def add_block(self, uid, fid, timestamp, amount, dispute = False): # disp_flag : T for a refund block
     try:
       t_id_msg = f"{uid}, {fid}, {timestamp}, {amount}"
@@ -104,6 +119,7 @@ class Grid:
                 "dispute_flag" : dispute
               }
       self.blockchain.append(block)
+      self.save_blockchain() # save after every new block
       x = "successful transaction" if dispute == False else "refund"
       print(f"Block of FID {fid} representing a {x} added to blockchain")
       return block
@@ -284,3 +300,4 @@ if __name__ == "__main__":
   print("\n" + "=" * 55)
   print("  All grid.py tests passed ✓")
   print("=" * 55 + "\n")
+
