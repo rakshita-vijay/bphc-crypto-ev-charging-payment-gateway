@@ -50,7 +50,7 @@ class Grid:
   def req_user_validation(self, u_obj = None):
     req_fields = [u_obj.u_name, u_obj.u_phone, u_obj.u_pin, u_obj.u_balance]
 
-    if all(x is not None for x in req_fields):
+    if u_obj.u_zone_code in self.zones and all(x is not None for x in req_fields):
       return self.register_user(u_obj)
     else:
       return False

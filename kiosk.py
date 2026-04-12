@@ -39,16 +39,18 @@ class Kiosk:
     print(f"QR code generated and saved as qrcode_xxxxxx{vfid[-6:]}.png in the folder 'qrcodes'")
     self.franchise.display_qrcode(f"qrcode_xxxxxx{vfid[-6:]}.png")
 
-  def decrypt_qrcode(self, qrcode_file_name):
+  def decrypt_qrcode(self, decoded_qr_data):
     # and verify hash???
 
     # 1. load and decode the qr code
     # img = Image.open(os.path.join("qrcodes", qrcode_file_name))
     # decoded_objects = decode(img)
 
+    '''
     img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
     detector = cv2.QRCodeDetector()
     decoded_qr_data, _, _ = detector.detectAndDecode(img)
+    '''
 
     # print(decoded_qr_data)
     # print(type(decoded_qr_data))
@@ -109,7 +111,7 @@ class Kiosk:
       print("Decryption failed --> tampered QR")
       return None, None
 
-  def process_payment(self, qrcode_file_name, payload):
+  def process_payment(self, payload):
     # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt
     """
     TO IMPLEMENT:
@@ -249,7 +251,7 @@ class Kiosk:
     print("-" * 60)
     print("Showing how Shor's algorithm breaks the RSA key used for this transaction...")
     try:
-      shor_algo.demonstrate_attack()
+      shor_algo.demonstrate_attack(payload)
     except Exception as e:
       print(f"Note: Shor's algorithm demo encountered: {e}")
 

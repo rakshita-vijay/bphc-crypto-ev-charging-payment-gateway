@@ -1,4 +1,6 @@
+import os
 import hashlib
+import cv2
 
 import rsa
 
@@ -22,7 +24,41 @@ class User:
     else:
       print("User registration failed")
 
-  def charge_request(self, qrcode_path, charge_amount:int):
+  def scan_qrcode(self, qrcode_file_name: str):
+    """
+    The EV Owner scans the QR code displayed on the Kiosk screen.
+
+    Responsibility split:
+      - User.scan_qrcode()     : reads the QR image and returns the raw
+                                  encoded string. This is the "scan" action.
+      - Kiosk.decrypt_qrcode() : receives that raw string and does the
+                                  ASCON decryption + FID verification.
+                                  The ASCON key is shared between Grid and
+                                  Kiosk, not the user — so decryption stays
+                                  in Kiosk.
+
+    Returns the raw QR string on success, None on failure.
+    """
+    if not qrcode_file_name:
+      print("QR file name is None.")
+      return None
+
+    img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
+    if img is None:
+      print(f"Could not read QR image: {qrcode_file_name}")
+      return None
+
+    detector = cv2.QRCodeDetector()
+    decoded_data, _, _ = detector.detectAndDecode(img)
+
+    if not decoded_data:
+      print("QR decode failed — blank or unreadable.")
+      return None
+
+    print(f"QR scanned successfully.")
+    return decoded_data
+
+  def charge_request(self, qrcode_path, charge_amount:float):
     """
     Prepares an RSA-encrypted payment payload to hand to the Kiosk.
 
@@ -40,14 +76,20 @@ class User:
       amount    - plaintext (not sensitive; used for billing display)
       rsa_e, rsa_n - public key sent alongside so the receiver can verify
     """
-    rsa_e, _rsa_d, rsa_n = rsa.generate_keys()
-    payload = {"QR_path": qrcode_path,
-            "VMID_enc" : rsa.encrypt_string(self.vmid,  rsa_e, rsa_n),
-            "PIN_enc": rsa.encrypt_string(self.u_pin, rsa_e, rsa_n),
-            "amount": charge_amount,
-            "rsa_e": rsa_e,
-            "rsa_n": rsa_n,
-            "_rsa_d": _rsa_d}
+    qr_raw_data = self.scan_qrcode(qrcode_path)
+    if qr_raw_data is None:
+      print("[User] charge_request aborted — QR scan failed.")
+      return None
+
+    rsa_e, rsa_d, rsa_n = rsa.generate_keys()
+
+    payload = {"QR_raw_data": qr_raw_data,
+              "VMID_enc" : rsa.encrypt_string(self.vmid, rsa_e, rsa_n),
+              "PIN_enc": rsa.encrypt_string(self.u_pin, rsa_e, rsa_n),
+              "amount": charge_amount,
+              "rsa_e": rsa_e,
+              "rsa_n": rsa_n,
+              "_rsa_d": rsa_d}
     return payload
 
   '''
@@ -126,6 +168,12 @@ class User:
       return None, None
   '''
 
+'''
+handoff:
+user.scan_qrcode(filename)     --> "abc123..., 12-04-26 14:30:00"
+kiosk.decrypt_qrcode(that_str) --> (True, "FID_ABC123")
+'''
+
 if __name__ == "__main__":
   from grid      import Grid
   from franchise import Franchise
@@ -149,7 +197,7 @@ if __name__ == "__main__":
 
   # 1. Valid registration
   print("\n[Test 1] Valid user registration")
-  u = User("Alice", "9000000001", "1234", grid, 500)
+  u = User("Alice", "9000000001", "1234", "Z1", grid, 500)
   check("UID set",          u.uid  is not None)
   check("VMID set",         u.vmid is not None)
   check("VMID format",      u.vmid == f"{u.uid}_{u.u_phone}")
@@ -158,27 +206,27 @@ if __name__ == "__main__":
 
   # 2. Second user — different UID/VMID
   print("\n[Test 2] Second user gets different UID/VMID")
-  u2 = User("Bob", "9000000002", "5678", grid, 300)
+  u2 = User("Bob", "9000000002", "5678", "Z2", grid, 300)
   check("Different UID",  u.uid  != u2.uid)
   check("Different VMID", u.vmid != u2.vmid)
 
   # 3. None name → validation failure
   print("\n[Test 3] User with None name (validation failure)")
-  u_bad = User(None, "9000000003", "0000", grid, 100)
+  u_bad = User(None, "9000000003", "0000", "Z1", grid, 100)
   check("UID is None",  u_bad.uid  is None)
   check("VMID is None", u_bad.vmid is None)
 
   # 4. Payload structure
   print("\n[Test 4] charge_request — payload structure")
   payload = u.charge_request("qrcodes/test.png", 200)
-  check("Has QR_path",    "QR_path"  in payload)
-  check("Has VMID_enc",   "VMID_enc" in payload)
-  check("Has PIN_enc",    "PIN_enc"  in payload)
-  check("Has amount",     "amount"   in payload)
-  check("Has rsa_e",      "rsa_e"    in payload)
-  check("Has rsa_n",      "rsa_n"    in payload)
-  check("Has _rsa_d",     "_rsa_d"   in payload)
-  check("Amount correct", payload["amount"] == 200)
+  check("Has QR_raw_data", "QR_raw_data"  in payload)
+  check("Has VMID_enc",    "VMID_enc" in payload)
+  check("Has PIN_enc",     "PIN_enc"  in payload)
+  check("Has amount",      "amount"   in payload)
+  check("Has rsa_e",       "rsa_e"    in payload)
+  check("Has rsa_n",       "rsa_n"    in payload)
+  check("Has _rsa_d",      "_rsa_d"   in payload)
+  check("Amount correct",  payload["amount"] == 200)
 
   # 5. Encrypted fields are lists of ints
   print("\n[Test 5] Encrypted fields are lists of ints")
