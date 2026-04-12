@@ -2,6 +2,7 @@ import os
 import datetime
 import hashlib
 from PIL import Image
+import random
 # from grid import Grid
 
 class Franchise:

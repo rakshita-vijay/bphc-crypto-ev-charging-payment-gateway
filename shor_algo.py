@@ -1,25 +1,27 @@
 import math
 import random
 
+from rsa import encrypt_string, decrypt_string
+
 def period(a, n):
-  #Objective: Find r such that a^r = 1 mod n
-  #This would normally be done with a quantum computer, but I'm doing it classically for demonstration
+  # Objective: Find r such that a^r = 1 mod n
+  # This would normally be done with a quantum computer, but I'm doing it classically for demonstration
   r = 1
   value = a % n
   while value != 1:
     value = (value * a) % n
     r += 1
-    #Safety limit
+    # Safety limit
     if r > n:
       return None
   return r
 
 def shor_algorithm(n):
-  #If we got an even number, just return 2 and n/2 as the factors
+  # If we got an even number, just return 2 and n/2 as the factors
   if n % 2 == 0:
     return 2, n // 2
 
-  #Giving 10 retries to factorize, a retry will fail if we can't find a valid period
+  # Giving 10 retries to factorize, a retry will fail if we can't find a valid period
   for attempt in range(10):
     a = random.randint(2, n-1)
 
@@ -35,7 +37,7 @@ def shor_algorithm(n):
     factor1 = math.gcd(pow(a, r // 2) - 1, n)
     factor2 = math.gcd(pow(a, r // 2) + 1, n)
 
-    #Make sure the factors we got aren't 1, n
+    # Make sure the factors we got aren't 1, n
     if factor1 != 1 and factor1 != n:
       return factor1, factor2
 
@@ -44,7 +46,7 @@ def shor_algorithm(n):
 def generate_rsa_keypair():
   #Generate the keypair, but with small values of p and q.
   #The keypair is intentionally weak to demonstrate Shor's algo
-  p, q = 61, 53 #random small primes for now
+  p, q = 7919, 1009 #random small primes for now
   N = p * q
   e = 17
   phi = (p-1) * (q-1)
@@ -54,10 +56,61 @@ def generate_rsa_keypair():
   private_keypair = (d, N)
   return public_keypair, private_keypair, p, q
 
-def demonstrate_attack():
-  public_key, private_key, original_p, original_q = generate_rsa_keypair()
-  e, N = public_key
+def recover_private_key(pub_e: int, pub_n: int):
+  """
+  Given only the public key (e, n), use Shor's to factor n,
+  then compute d = e^(-1) mod phi(n).
+  Returns d or None if factoring fails.
+  """
+  print(f"[Shor] Targeting public key: n={pub_n}, e={pub_e}")
+  result = shor_algorithm(pub_n)
+  if result is None:
+    print("[Shor] Factoring failed after 10 attempts.")
+    return None
+  p, q = result
+  phi_n = (p - 1) * (q - 1)
+  d = pow(pub_e, -1, phi_n)
+  print(f"[Shor] Factored n={pub_n} --> p={p}, q={q}")
+  print(f"[Shor] Recovered private key: d={d}")
+  return d
 
+def demonstrate_attack(payload = None):
+  if payload is None:
+    public_key, private_key, original_p, original_q = generate_rsa_keypair()
+    e, N = public_key
+
+    vmid = "DEMO_VMID_12345"
+    pin = "9999"
+
+    vmid_ct = encrypt_string(vmid, e, n)
+    pin_ct = encrypt_string(pin, e, n)
+
+    print(f"[Shor] Generated demo key: n={n}")
+  else:
+    e = payload["rsa_e"]
+    n = payload["rsa_n"]
+    vmid_ct = payload["VMID_enc"]
+    pin_ct = payload["PIN_enc"]
+
+    print("[Shor] Attacking real payload...")
+
+  d = recover_private_key(e, n)
+  if d is None:
+    print("[Shor] Attack failed.")
+    print("─" * 60 + "\n")
+    return False
+
+  vmid = decrypt_string(vmid_ct, d, n)
+  pin = decrypt_string(pin_ct, d, n)
+
+  print(f"\n[Shor] Decrypted VMID : {vmid}")
+  print(f"[Shor] Decrypted PIN : {pin}")
+  print("[Shor] RSA is broken under Shor's Algorithm.")
+  print("─" * 60 + "\n")
+
+  return True
+
+  '''
   print(f"RSA Public Key: e={e}, N={N}")
   print(f"Attacker only knows N={N}. Attempting to factor it...")
 
@@ -76,6 +129,7 @@ def demonstrate_attack():
     print("RSA encryption is BROKEN for this key.")
   else:
     print("Factoring failed.")
+  '''
 
 if __name__ == "__main__":
   demonstrate_attack()

@@ -6,6 +6,8 @@ from kiosk import Kiosk
 from user import User
 from tabulate import tabulate
 
+import shor_algo
+
 # def print_users(grid):
 #   print("\n--- USERS ---")
 #   print(f"{'UID':<20} {'Name':<10} {'Phone':<12} {'Balance':<10}")
@@ -198,10 +200,10 @@ if __name__ == "__main__":
   print("8. Shor's Algorithm Demo")
   # ────────────────────────────────────────────────────────────
   print("\n[Standalone demo] Weak key (p=61, q=53):")
-  demonstrate_attack()
+  shor_algo.demonstrate_attack()
 
   print("\n[Real payload attack] Intercepting Aditya's next payment:")
-  demonstrate_attack(u2.charge_request(qr_z4, 50))
+  shor_algo.demonstrate_attack(u2.charge_request(qr_z4, 50))
 
   # ────────────────────────────────────────────────────────────
   print("9. Blockchain Ledger & Chain Verification")
