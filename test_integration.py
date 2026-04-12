@@ -20,7 +20,7 @@ def check(label, condition):
     raise AssertionError(f"FAILED: {label}")
 
 def test_complete_payment_flow():
-  """Test: User registers → Franchise registers → Generate QR → Process payment"""
+  """Test: User registers --> Franchise registers --> Generate QR --> Process payment"""
   print("\n" + "=" * 70)
   print("  INTEGRATION TEST: Complete Payment Flow")
   print("=" * 70)
@@ -62,14 +62,14 @@ def test_complete_payment_flow():
 
   # Step 5: Process Payment
   print("\n[Step 5] Process Payment")
-  result = kiosk.process_payment(qr_filename, user.uid, franchise.fid, payload, 200)
-  check("Payment result returned", result is not None)
+  result = kiosk.process_payment(payload) # single arg
+  check("Result returned", result is not None)
   check("Payment successful", result["success"] == True)
 
   # Step 6: Verify Balances Updated
   print("\n[Step 6] Balance Verification")
-  check("User balance deducted", user.u_balance == 800)  # 1000 - 200
-  check("Franchise balance credited", franchise.f_balance == 700)  # 500 + 200
+  check("User balance deducted", user.u_balance == 800) # 1000 - 200
+  check("Franchise balance credited", franchise.f_balance == 700) # 500 + 200
 
   # Step 7: Verify Blockchain
   print("\n[Step 7] Blockchain Verification")
@@ -102,7 +102,7 @@ def test_insufficient_balance():
   qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
   payload = user.charge_request(qr_filename, 500)  # Trying to charge 500 but only has 100
 
-  result = kiosk.process_payment(qr_filename, user.uid, franchise.fid, payload, 500)
+  result = kiosk.process_payment(qr_filename, payload)
   check("Payment rejected", result["success"] == False)
   check("Reason is insufficient balance", "Grid Authority rejected" in result["reason"])
   check("User balance unchanged", user.u_balance == 100)
@@ -132,7 +132,7 @@ def test_wrong_pin():
   import rsa as rsa_module
   payload["PIN_enc"] = rsa_module.encrypt_string("9999", payload["rsa_e"], payload["rsa_n"])
 
-  result = kiosk.process_payment(qr_filename, user.uid, franchise.fid, payload, 200)
+  result = kiosk.process_payment(payload)
   check("Payment rejected", result["success"] == False)
   check("User balance unchanged", user.u_balance == 500)
 
@@ -140,9 +140,8 @@ def test_wrong_pin():
   print("  ✓ WRONG PIN TEST PASSED")
   print("=" * 70 + "\n")
 
-
 def test_hardware_failure_refund():
-  """Test: Hardware failure after payment → automatic refund"""
+  """Test: Hardware failure after payment --> automatic refund"""
   print("\n" + "=" * 70)
   print("  TEST: Hardware Failure with Auto-Refund")
   print("=" * 70)
@@ -160,7 +159,7 @@ def test_hardware_failure_refund():
   qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
   payload = user.charge_request(qr_filename, 300)
 
-  result = kiosk.process_payment(qr_filename, user.uid, franchise.fid, payload, 300)
+  result = kiosk.process_payment(payload)
 
   check("Payment indicates hardware failure", "Hardware failure" in result["reason"])
   check("Refund was triggered", result.get("refund") == True)
@@ -189,33 +188,33 @@ def test_multiple_transactions():
   franchise1 = Franchise("Station_A", "ACC005", "Z1", "pass222", 100, grid)
   franchise2 = Franchise("Station_B", "ACC006", "Z2", "pass333", 200, grid)
 
-  # Transaction 1: User1 → Franchise1
+  # Transaction 1: User1 --> Franchise1
   print("\n  Transaction 1: User1 charges 150 at Franchise1")
   kiosk1 = Kiosk(grid, franchise1)
   kiosk1.generate_qrcode()
   qr1 = f"qrcode_xxxxxx{franchise1.vfid[-6:]}.png"
   payload1 = user1.charge_request(qr1, 150)
-  result1 = kiosk1.process_payment(qr1, user1.uid, franchise1.fid, payload1, 150)
+  result1 = kiosk1.process_payment(payload1)
   check("Transaction 1 successful", result1["success"] == True)
 
-  # Transaction 2: User2 → Franchise2
+  # Transaction 2: User2 --> Franchise2
   # IMPORTANT: Create a NEW kiosk with fresh timestamp!
   print("\n  Transaction 2: User2 charges 200 at Franchise2")
   kiosk2 = Kiosk(grid, franchise2)  # NEW kiosk instance
   kiosk2.generate_qrcode()  # Generates fresh QR with new timestamp
   qr2 = f"qrcode_xxxxxx{franchise2.vfid[-6:]}.png"
   payload2 = user2.charge_request(qr2, 200)
-  result2 = kiosk2.process_payment(qr2, user2.uid, franchise2.fid, payload2, 200)
+  result2 = kiosk2.process_payment(payload2)
   check("Transaction 2 successful", result2["success"] == True)
 
-  # Transaction 3: User1 → Franchise2
+  # Transaction 3: User1 --> Franchise2
   # Create ANOTHER NEW kiosk with fresh timestamp
   print("\n  Transaction 3: User1 charges 100 at Franchise2")
   kiosk3 = Kiosk(grid, franchise2)  # NEW kiosk instance
   kiosk3.generate_qrcode()  # Generates fresh QR with new timestamp
   qr3 = f"qrcode_xxxxxx{franchise2.vfid[-6:]}.png"
   payload3 = user1.charge_request(qr3, 100)
-  result3 = kiosk3.process_payment(qr3, user1.uid, franchise2.fid, payload3, 100)
+  result3 = kiosk3.process_payment(payload3)
   check("Transaction 3 successful", result3["success"] == True)
 
   # Verify final balances

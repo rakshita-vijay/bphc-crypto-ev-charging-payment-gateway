@@ -77,7 +77,7 @@ if __name__ == "__main__":
   print("\n[Scenario] Invalid zone code (Z99):")
   fr_bad = Franchise("GhostStation", "ACC999", "Z99", "badpwd", 100, grid)
   assert fr_bad.fid is None
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
   display_franchises(grid)
 
   # ────────────────────────────────────────────────────────────
@@ -88,10 +88,10 @@ if __name__ == "__main__":
   u3 = User("Priya",    9999999993, "4321", "Z3", grid, 250)
   u4 = User("Vedant",   9999999994, "9999", "Z4", grid, 0)     # zero balance
 
-  print("\n[Scenario] None name → rejected:")
+  print("\n[Scenario] None name --> rejected:")
   u_bad = User(None, 0000000000, "0000", "Z0", grid, 100)
   assert u_bad.uid is None
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
   display_users(grid)
 
   # ────────────────────────────────────────────────────────────
@@ -112,15 +112,15 @@ if __name__ == "__main__":
   # ────────────────────────────────────────────────────────────
   print("5. Successful Payments (cross-zone allowed)")
   # ────────────────────────────────────────────────────────────
-  print("\n[A] Rakshita → Z1/Tata (₹200)")
+  print("\n[A] Rakshita --> Z1/Tata (₹200)")
   r = kiosk_z1.process_payment(u1.charge_request(qr_z1, 200))
   assert r["success"] and u1.u_balance == 800 and fr_z1.f_balance == 5200
 
-  print("\n[B] Aditya → Z4/Adani (₹150)")
+  print("\n[B] Aditya --> Z4/Adani (₹150)")
   r = kiosk_z4.process_payment(u2.charge_request(qr_z4, 150))
   assert r["success"] and u2.u_balance == 350 and fr_z4.f_balance == 3150
 
-  print("\n[C] Priya → Z7/ChargePoint (₹100)")
+  print("\n[C] Priya --> Z7/ChargePoint (₹100)")
   r = kiosk_z7.process_payment(u3.charge_request(qr_z7, 100))
   assert r["success"] and u3.u_balance == 150 and fr_z7.f_balance == 8100
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
   print("\n[Edge 1] Vedant (₹0 balance) tries ₹100:")
   r = kiosk_z1.process_payment(u4.charge_request(qr_z1, 100))
   assert not r["success"] and u4.u_balance == 0
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
 
   print("\n[Edge 2] Wrong PIN:")
   from rsa import generate_keys, encrypt_string
@@ -153,24 +153,24 @@ if __name__ == "__main__":
   }
   r = kiosk_z1.process_payment(bad_payload)
   assert not r["success"]
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
 
   print("\n[Edge 3] Priya overspend (has ₹150, requests ₹200):")
   r = kiosk_z7.process_payment(u3.charge_request(qr_z7, 200))
   assert not r["success"] and u3.u_balance == 150
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
 
   print("\n[Edge 4] None payload (scan failed):")
   r = kiosk_z1.process_payment(None)
   assert not r["success"]
-  print("  → Cleanly aborted.")
+  print("  --> Cleanly aborted.")
 
   print("\n[Edge 5] Tampered QR string in payload:")
   t_payload = u1.charge_request(qr_z1, 50)
   t_payload["QR_raw_data"] = f"deadbeef0000000000000000, {kiosk_z1.timestamp}"
   r = kiosk_z1.process_payment(t_payload)
   assert not r["success"]
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
 
   print("\n[Edge 6] Replay attack — stale timestamp:")
   old_ts   = "01-01-20 00:00:00"
@@ -179,10 +179,10 @@ if __name__ == "__main__":
   r_payload["QR_raw_data"] = f"{old_vfid}, {old_ts}"
   r = kiosk_z1.process_payment(r_payload)
   assert not r["success"]
-  print("  → Correctly rejected.")
+  print("  --> Correctly rejected.")
 
   # ────────────────────────────────────────────────────────────
-  print("7. Hardware Failure → Refund (Reverse Block)")
+  print("7. Hardware Failure --> Refund (Reverse Block)")
   # ────────────────────────────────────────────────────────────
   print("\n[Edge 7] Rakshita pays ₹100 but cable fails:")
   bal_u_pre  = u1.u_balance
@@ -194,7 +194,7 @@ if __name__ == "__main__":
   assert u1.u_balance  == bal_u_pre,  "User should be fully refunded"
   assert fr_z1.f_balance == bal_fr_pre, "Franchise should be debited back"
   assert grid.blockchain[-1]["dispute_flag"] == True
-  print("  → Refund processed. Dispute block recorded.")
+  print("  --> Refund processed. Dispute block recorded.")
 
   # ────────────────────────────────────────────────────────────
   print("8. Shor's Algorithm Demo")

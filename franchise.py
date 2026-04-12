@@ -46,7 +46,7 @@ class Franchise:
       # self.f_balance += amount
       print(f"Transaction for {self.f_name} accepted.")
       print("Attempting to unlock charging cable...")
-      status = self.unlock_charging_cable(1)
+      status = self.unlock_charging_cable()
       if status:
         print(f"Charging cable unlocked successfully for {self.f_name}")
         return True
@@ -58,7 +58,7 @@ class Franchise:
       print(f"Transaction for {self.f_name} rejected.")
       return None
 
-  def unlock_charging_cable(self, flag):
+  def unlock_charging_cable(self):
     # implement this
     # True if unlocked, False if failed to unlock
     try:

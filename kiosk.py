@@ -129,15 +129,15 @@ class Kiosk:
       2. Decrypt VMID and PIN from the RSA-encrypted payload.
       3. Forward auth request to the Grid.
       4. Attempt to unlock the charging cable.
-      5. If cable unlock fails after a successful payment → trigger refund.
+      5. If cable unlock fails after a successful payment --> trigger refund.
 
     Edge cases handled:
-      - Invalid / tampered QR → reject immediately.
-      - Grid rejects (bad PIN / balance / VMID) → inform franchise.
-      - Payment approved but hardware fails → call add_reverse_block.
+      - Invalid / tampered QR --> reject immediately.
+      - Grid rejects (bad PIN / balance / VMID) --> inform franchise.
+      - Payment approved but hardware fails --> call add_reverse_block.
     """
-    '''
-    confirmation, fid_from_decrypt = self.decrypt_qrcode(qrcode_file_name)
+    """
+    confirmation, fid_from_decrypt = self.decrypt_qrcode(payload["QR_raw_data"])
 
     if (confirmation == False or fid_from_decrypt != fid):
       print("Payment failed due to invalid QR")
@@ -152,7 +152,7 @@ class Kiosk:
       status = self.franchise.confirmation(success, payload["amount"])
       if (success and status == False):
         self.grid.add_reverse_block(uid, fid, payload["amount"])
-    '''
+    """
     if payload is None:
       print("[Kiosk] Payment aborted — no payload (QR scan failed).")
       self.franchise.confirmation(False, 0)

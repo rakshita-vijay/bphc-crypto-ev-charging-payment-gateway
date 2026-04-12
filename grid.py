@@ -200,14 +200,14 @@ if __name__ == "__main__":
   check("Franchise in registry", fr1.fid in grid.franchises)
 
   # ── 2. Invalid zone code ──────────────────────────────────
-  print("\n[Test 2] Franchise with invalid zone code (Z9)")
-  fr_bad = Franchise("BadStation", "ACC002", "Z9", "secret", 500, grid)
+  print("\n[Test 2] Franchise with invalid zone code (Z19)")
+  fr_bad = Franchise("BadStation", "ACC002", "Z19", "secret", 500, grid)
   check("FID is None for bad zone", fr_bad.fid is None)
   check("Not in registry",          fr_bad.fid not in grid.franchises)
 
   # ── 3. Valid user registration ────────────────────────────
   print("\n[Test 3] Valid user registration")
-  u1 = User("Alice", "9000000001", "4321", grid, 800)
+  u1 = User("Alice", 9000000001, "4321", "Z1", grid, 800)
   check("UID is set",   u1.uid  is not None)
   check("VMID is set",  u1.vmid is not None)
   check("VMID format",  u1.vmid == f"{u1.uid}_{u1.u_phone}")
@@ -215,7 +215,7 @@ if __name__ == "__main__":
 
   # ── 4. User missing required field ───────────────────────
   print("\n[Test 4] User with None name (should fail validation)")
-  u_bad = User(None, "9000000002", "0000", grid, 100)
+  u_bad = User(None, 9000000002, "0000", grid, 100)
   check("UID is None",  u_bad.uid  is None)
   check("VMID is None", u_bad.vmid is None)
 
@@ -250,7 +250,7 @@ if __name__ == "__main__":
   # ── 9. Second franchise and cross-payment ────────────────
   print("\n[Test 9] Second franchise (Z2), second user, cross-payment")
   fr2 = Franchise("StationBeta", "ACC003", "Z2", "pwd2", 0, grid)
-  u2  = User("Bob", "9000000003", "9999", grid, 300)
+  u2  = User("Bob", 9000000003, "9999", grid, 300)
   ok  = grid.validate_transaction(fr2.fid, u2.vmid, u2.u_pin, 150)
   check("Returns True",               ok)
   check("Bob's balance is 150",       u2.u_balance  == 150)
@@ -294,8 +294,8 @@ if __name__ == "__main__":
   ts   = "01-04-26 12:00:00"
   vfid = grid.generate_vfid(fr1.fid, ts)
   check("VFID is a hex string",      isinstance(vfid, str))
-  check("Different fid → diff vfid", grid.generate_vfid(fr2.fid, ts) != vfid)
-  check("Different ts → diff vfid",  grid.generate_vfid(fr1.fid, "02-04-26 12:00:00") != vfid)
+  check("Different fid --> diff vfid", grid.generate_vfid(fr2.fid, ts) != vfid)
+  check("Different ts --> diff vfid",  grid.generate_vfid(fr1.fid, "02-04-26 12:00:00") != vfid)
 
   print("\n" + "=" * 55)
   print("  All grid.py tests passed ✓")

@@ -210,7 +210,7 @@ if __name__ == "__main__":
   check("Different UID",  u.uid  != u2.uid)
   check("Different VMID", u.vmid != u2.vmid)
 
-  # 3. None name → validation failure
+  # 3. None name --> validation failure
   print("\n[Test 3] User with None name (validation failure)")
   u_bad = User(None, "9000000003", "0000", "Z1", grid, 100)
   check("UID is None",  u_bad.uid  is None)

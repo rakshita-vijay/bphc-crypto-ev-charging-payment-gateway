@@ -47,7 +47,7 @@ This is a comprehensive digital transaction system for purchasing electric vehic
 2. **Invalid PIN**: Transaction rejected with wrong PIN
 3. **Expired QR Code**: Timestamp mismatch prevents replay attacks
 4. **Tampered QR Code**: ASCON decryption fails or FID mismatch detected
-5. **Hardware Failure**: If cable unlock fails after payment → auto-refund
+5. **Hardware Failure**: If cable unlock fails after payment --> auto-refund
 6. **Unknown User/Franchise**: Transaction rejected if UID/FID not found
 
 ### Quantum Cryptography Vulnerability

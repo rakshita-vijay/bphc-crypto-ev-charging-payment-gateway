@@ -209,7 +209,7 @@ if __name__ == "__main__":
   # ── 7. String — empty string ──────────────────────────────
   print("\n[Test 7] Empty string")
   ct = encrypt_string("", e, n)
-  check("Empty string → empty list", ct == [])
+  check("Empty string --> empty list", ct == [])
   check("Round-trip empty",          decrypt_string(ct, d, n) == "")
 
   # ── 8. Dict round-trip — simple ───────────────────────────
@@ -231,19 +231,19 @@ if __name__ == "__main__":
   ct = encrypt_dict(nested, e, n)
   check("Nested dict round-trips", decrypt_dict(ct, d, n) == nested)
 
-  # ── 10. Different plaintexts → different ciphertexts ──────
+  # ── 10. Different plaintexts --> different ciphertexts ──────
   print("\n[Test 10] Different inputs produce different ciphertexts")
   ct1 = encrypt_string("hello", e, n)
   ct2 = encrypt_string("world", e, n)
-  check("Different strings → different CT", ct1 != ct2)
+  check("Different strings --> different CT", ct1 != ct2)
 
   # ── 11. Encryption is deterministic ───────────────────────
   print("\n[Test 11] Encryption is deterministic")
   ct_a = encrypt_string("hello", e, n)
   ct_b = encrypt_string("hello", e, n)
-  check("Same input → same CT", ct_a == ct_b)
+  check("Same input --> same CT", ct_a == ct_b)
 
-  # ── 12. Wrong private key → garbage output ─────────────────
+  # ── 12. Wrong private key --> garbage output ─────────────────
   print("\n[Test 12] Wrong private key gives wrong result")
   ct   = encrypt_string("secret", e, n)
   try:
