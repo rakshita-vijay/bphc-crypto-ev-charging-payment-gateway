@@ -1,5 +1,20 @@
 import ascon
 
+def get_key_nonce_pt_ad(self, fid, timestamp):
+  try:
+    key = b"RaksAditPriyVeda"
+    nonce = timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+    # nonce - number used once; ensures same input != same output and prevents replay attacks
+    pt = fid.encode("utf-8") # actua data to protect
+    ad = timestamp.encode("utf-8")
+    # associated data is: data that is NOT encrypted, but is authenticated
+    # timestamp is not hidden but cannot be tampered with
+    return key, nonce, pt, ad
+
+  except Exception as e:
+    print(f"Exception: {e}")
+    return None, None, None, None
+
 def ascon_encrypt(key = None, nonce = None, ad = None, plaintext = None, variant="Ascon-128"):
   """
   key: 16 bytes

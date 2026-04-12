@@ -32,7 +32,7 @@ def test_complete_payment_flow():
 
   # Step 1: User Registration
   print("\n[Step 1] User Registration")
-  user = User("Alice", "9000000001", "1234", grid, 1000)
+  user = User("Alice", 9000000001, "1234", "Z1", grid, 1000)
   check("User UID generated", user.uid is not None)
   check("User VMID generated", user.vmid is not None)
   check("User registered in grid", user.uid in grid.users)
@@ -93,7 +93,7 @@ def test_insufficient_balance():
   print("=" * 70)
 
   grid = Grid()
-  user = User("Bob", "9000000002", "5678", grid, 100)  # Only 100 balance
+  user = User("Bob", 9000000002, "5678", "Z2", grid, 100)  # Only 100 balance
   franchise = Franchise("ChargingStation_Zone2", "ACC002", "Z2", "pass456", 500, grid)
 
   kiosk = Kiosk(grid, franchise)
@@ -102,7 +102,7 @@ def test_insufficient_balance():
   qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
   payload = user.charge_request(qr_filename, 500)  # Trying to charge 500 but only has 100
 
-  result = kiosk.process_payment(qr_filename, payload)
+  result = kiosk.process_payment(payload)
   check("Payment rejected", result["success"] == False)
   check("Reason is insufficient balance", "Grid Authority rejected" in result["reason"])
   check("User balance unchanged", user.u_balance == 100)
@@ -119,7 +119,7 @@ def test_wrong_pin():
   print("=" * 70)
 
   grid = Grid()
-  user = User("Charlie", "9000000003", "1111", grid, 500)
+  user = User("Charlie", 9000000003, "1111", "Z3", grid, 500)
   franchise = Franchise("ChargingStation_Zone3", "ACC003", "Z3", "pass789", 500, grid)
 
   kiosk = Kiosk(grid, franchise)
@@ -147,7 +147,7 @@ def test_hardware_failure_refund():
   print("=" * 70)
 
   grid = Grid()
-  user = User("Diana", "9000000004", "2222", grid, 1000)
+  user = User("Diana", 9000000004, "2222", "Z4", grid, 1000)
   franchise = Franchise("ChargingStation_Zone1", "ACC004", "Z1", "pass111", 500, grid)
 
   # Configure franchise to fail hardware unlock
@@ -182,8 +182,8 @@ def test_multiple_transactions():
   grid = Grid()
 
   # Create 2 users and 2 franchises
-  user1 = User("Eve", "9000000005", "3333", grid, 1000)
-  user2 = User("Frank", "9000000006", "4444", grid, 800)
+  user1 = User("Eve", 9000000005, "3333", "Z5", grid, 1000)
+  user2 = User("Frank", 9000000006, "4444", "Z6", grid, 800)
 
   franchise1 = Franchise("Station_A", "ACC005", "Z1", "pass222", 100, grid)
   franchise2 = Franchise("Station_B", "ACC006", "Z2", "pass333", 200, grid)

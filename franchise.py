@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
   # ── 2. Invalid zone code ──────────────────────────────────
   print("\n[Test 2] Invalid zone code (Z9)")
-  fr_bad = Franchise("BadStation", "ACC002", "Z9", "pwd", 100, grid)
+  fr_bad = Franchise("BadStation", "ACC002", "Z09", "pwd", 100, grid)
   check("FID is None",           fr_bad.fid is None)
   check("Not in registry",       fr_bad.fid not in grid.franchises)
 

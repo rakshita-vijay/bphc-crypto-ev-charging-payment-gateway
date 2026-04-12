@@ -1,7 +1,7 @@
 import os
 import datetime
 import hashlib
-from ascon_lwc import ascon_encrypt
+from ascon_lwc import get_key_nonce_pt_ad, ascon_encrypt
 import json
 
 class Grid:
@@ -29,16 +29,14 @@ class Grid:
 
   def generate_vfid(self, fid, timestamp):
     # implement using lwc algo, below is placeholder
-    key = b"RaksAditPriyVeda"
-    nonce = timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
-    # nonce - number used once; ensures same input != same output and prevents replay attacks
-    pt = fid.encode("utf-8") # actua data to protect
-    ad = timestamp.encode("utf-8")
-    # associated data is: data that is NOT encrypted, but is authenticated
-    # timestamp is not hidden but cannot be tampered with
-    vfid = ascon_encrypt(key, nonce, ad, pt)
+    key, nonce, pt, ad = get_key_nonce_pt_ad(fid, timestamp)
 
-    return vfid.hex()
+    req_fields = [key, nonce, pt, ad]
+    if all(x is not None for x in req_fields):
+      vfid = ascon_encrypt(key, nonce, ad, pt)
+      return vfid.hex()
+    else:
+      return None
 
   def req_fran_validation(self, f_obj = None):
     req_fields = [f_obj.f_name, f_obj.f_pwd, f_obj.f_balance, f_obj.f_time_acc_create]
@@ -93,17 +91,17 @@ class Grid:
 
   # Add to grid.py
   def save_blockchain(self):
-      import json
-      with open("blockchain_ledger.json", "w") as f:
-          json.dump(self.blockchain, f, indent=2)
+    import json
+    with open("blockchain_ledger.json", "w") as f:
+      json.dump(self.blockchain, f, indent=2)
 
   def load_blockchain(self):
-      import json
-      try:
-          with open("blockchain_ledger.json", "r") as f:
-              self.blockchain = json.load(f)
-      except FileNotFoundError:
-          self.blockchain = []
+    import json
+    try:
+      with open("blockchain_ledger.json", "r") as f:
+        self.blockchain = json.load(f)
+    except FileNotFoundError:
+      self.blockchain = []
 
   def add_block(self, uid, fid, timestamp, amount, dispute = False): # disp_flag : T for a refund block
     try:
@@ -215,7 +213,7 @@ if __name__ == "__main__":
 
   # ── 4. User missing required field ───────────────────────
   print("\n[Test 4] User with None name (should fail validation)")
-  u_bad = User(None, 9000000002, "0000", grid, 100)
+  u_bad = User(None, 9000000002, "0000", "Z2", grid, 100)
   check("UID is None",  u_bad.uid  is None)
   check("VMID is None", u_bad.vmid is None)
 
@@ -250,7 +248,7 @@ if __name__ == "__main__":
   # ── 9. Second franchise and cross-payment ────────────────
   print("\n[Test 9] Second franchise (Z2), second user, cross-payment")
   fr2 = Franchise("StationBeta", "ACC003", "Z2", "pwd2", 0, grid)
-  u2  = User("Bob", 9000000003, "9999", grid, 300)
+  u2  = User("Bob", 9000000003, "9999", "Z2", grid, 300)
   ok  = grid.validate_transaction(fr2.fid, u2.vmid, u2.u_pin, 150)
   check("Returns True",               ok)
   check("Bob's balance is 150",       u2.u_balance  == 150)
@@ -300,4 +298,3 @@ if __name__ == "__main__":
   print("\n" + "=" * 55)
   print("  All grid.py tests passed ✓")
   print("=" * 55 + "\n")
-

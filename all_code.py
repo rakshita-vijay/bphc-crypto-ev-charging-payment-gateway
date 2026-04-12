@@ -2,7 +2,9 @@ import os, sys
 
 all_files = []
 
-with open("code.py", "w") as out_file:
+file_name = "code.py"
+
+with open(file_name, "w") as out_file:
   for root, dirs, files in os.walk(os.getcwd()):
     dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'qrcodes', 'pages']]
     files[:] = [f for f in files if f not in ['.gitignore', 'all_code_not_2_largest.py', 'all_code.py', 'app.py', 'code_not_2_largest.py', 'code.py', 'README.md', 'v_imp_to_clear_qrcodes.py']]
@@ -15,11 +17,14 @@ with open("code.py", "w") as out_file:
       except Exception:
         continue
 
+  print("Collected all file paths")
+
   if len(all_files) == 0:
     print("No files found")
     exit()
 
   sorted_data = sorted(all_files)
+  print("Sorted all the files")
 
   for file_path in sorted_data:
     try:
@@ -30,3 +35,5 @@ with open("code.py", "w") as out_file:
     except Exception:
       # Skip binary/unreadable files
       continue
+
+print(f"Written all the files to {file_name}")

@@ -145,20 +145,21 @@ class User:
       if (ts == self.timestamp):
         # NOTE: To "verify", you must re-hash known data and check if the hashes match.
 
-        key = b"RaksAditPriyVeda"
-        nonce = self.timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
-        # nonce - number used once; ensures same input != same output and prevents replay attacks
-        ad = self.timestamp.encode("utf-8")
+        key, nonce, pt, ad = get_key_nonce_pt_ad(fid, timestamp)
 
-        # step: Decrypt
-        pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
-        fid = pt.decode()
+        req_fields = [key, nonce, pt, ad]
+        if all(x is not None for x in req_fields):
+          # step: Decrypt
+          pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
+          fid = pt.decode()
 
-        if (fid == self.franchise.fid):
-          return True, fid # placeholder
+          if (fid == self.franchise.fid):
+            return True, fid # placeholder
+          else:
+            raise Exception("FIDs don't match")
+            # return False, None # placeholder
         else:
-          raise Exception("FIDs don't match")
-          # return False, None # placeholder
+          return Exception("Decryption failed - something in req_fields is None")
       else:
         raise Exception("Timestamps don't match")
 
@@ -197,7 +198,7 @@ if __name__ == "__main__":
 
   # 1. Valid registration
   print("\n[Test 1] Valid user registration")
-  u = User("Alice", "9000000001", "1234", "Z1", grid, 500)
+  u = User("Alice", 9000000001, "1234", "Z1", grid, 500)
   check("UID set",          u.uid  is not None)
   check("VMID set",         u.vmid is not None)
   check("VMID format",      u.vmid == f"{u.uid}_{u.u_phone}")
@@ -206,13 +207,13 @@ if __name__ == "__main__":
 
   # 2. Second user — different UID/VMID
   print("\n[Test 2] Second user gets different UID/VMID")
-  u2 = User("Bob", "9000000002", "5678", "Z2", grid, 300)
+  u2 = User("Bob", 9000000002, "5678", "Z2", grid, 300)
   check("Different UID",  u.uid  != u2.uid)
   check("Different VMID", u.vmid != u2.vmid)
 
   # 3. None name --> validation failure
   print("\n[Test 3] User with None name (validation failure)")
-  u_bad = User(None, "9000000003", "0000", "Z1", grid, 100)
+  u_bad = User(None, 9000000003, "0000", "Z1", grid, 100)
   check("UID is None",  u_bad.uid  is None)
   check("VMID is None", u_bad.vmid is None)
 

@@ -1,0 +1,1998 @@
+# --- _to_do.txt ---
+grid line 91 onwards
+franchise line 21 & 36 & 46 just the function
+kiosk line 43 (huge ass function) & 113 (work on pls pls)
+user line 24 (work on it pls pls) and all user functions what even
+rsa encryption check
+shor's incroporate to work on integers, characters,
+grid, franchise, kiosk, and user data needs to be stored on firebase? or json file on local?
+
+# --- ascon_lwc.py ---
+import ascon
+
+def ascon_encrypt(key = None, nonce = None, ad = None, plaintext = None, variant="Ascon-128"):
+  """
+  key: 16 bytes
+  nonce: 16 bytes
+  ad: bytes (associated data)
+  plaintext: bytes
+  """
+  req_fields = [key, nonce, ad, plaintext]
+  if any(x is None for x in req_fields):
+    print(req_fields)
+    raise ValueError("Something is None in ascon_encrypt")
+
+  ciphertext = ascon.encrypt(key, nonce, ad, plaintext, variant)
+  if ciphertext is None:
+    raise ValueError("Encryption failed in ascon_encrypt")
+  return ciphertext
+
+def ascon_decrypt(key = None, nonce = None, ad = None, ciphertext = None, variant="Ascon-128"):
+  req_fields = [key, nonce, ad, ciphertext]
+  if any(x is None for x in req_fields):
+    print(req_fields)
+    raise ValueError("Something is None in ascon_decrypt")
+
+  plaintext = ascon.decrypt(key, nonce, ad, ciphertext, variant)
+  if plaintext is None:
+    raise ValueError("Decryption failed in ascon_decrypt")
+  return plaintext
+
+# --- blockchain_ledger.json ---
+[
+  {
+    "transaction_id": "2f75641032208e555cd0ff3027b12320dc377faa11755e2ad7c16f850d70d171",
+    "prev_block_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "timestamp": "13-04-26 00:40:53",
+    "uid": "195b2fd1d89b8ad4",
+    "fid": "cb3ab1c506b48afb",
+    "amount": 200,
+    "dispute_flag": false
+  },
+  {
+    "transaction_id": "d478c347110e4cdf3b1883b27c2347f300829789f2d14b8b5be283d54bd25392",
+    "prev_block_hash": "2f75641032208e555cd0ff3027b12320dc377faa11755e2ad7c16f850d70d171",
+    "timestamp": "13-04-26 00:40:53",
+    "uid": "f311b3c51bd59355",
+    "fid": "dddd261ef17ee595",
+    "amount": 150,
+    "dispute_flag": false
+  },
+  {
+    "transaction_id": "11a4c750684cf4910ca25e1f622d633175322068308c20325a47090fa43f5c09",
+    "prev_block_hash": "d478c347110e4cdf3b1883b27c2347f300829789f2d14b8b5be283d54bd25392",
+    "timestamp": "13-04-26 00:40:53",
+    "uid": "0100fb6d99263945",
+    "fid": "a459d71dd6600dea",
+    "amount": 100,
+    "dispute_flag": false
+  },
+  {
+    "transaction_id": "cdc528129337c62d8d8c4a16d21340761b16d78aa34a8d8d96ce44c915a88658",
+    "prev_block_hash": "11a4c750684cf4910ca25e1f622d633175322068308c20325a47090fa43f5c09",
+    "timestamp": "13-04-26 00:40:54",
+    "uid": "195b2fd1d89b8ad4",
+    "fid": "cb3ab1c506b48afb",
+    "amount": 300,
+    "dispute_flag": false
+  },
+  {
+    "transaction_id": "746f6b30ba0da98bbf1f12361c64696c9dde385f993a6f435bdbbca0eb519468",
+    "prev_block_hash": "cdc528129337c62d8d8c4a16d21340761b16d78aa34a8d8d96ce44c915a88658",
+    "timestamp": "13-04-26 00:40:54",
+    "uid": "f311b3c51bd59355",
+    "fid": "cb3ab1c506b48afb",
+    "amount": 100,
+    "dispute_flag": false
+  },
+  {
+    "transaction_id": "0cd44502174e066f760248ee1836cf747e629849a9d1475e7bab081b9be0ec95",
+    "prev_block_hash": "746f6b30ba0da98bbf1f12361c64696c9dde385f993a6f435bdbbca0eb519468",
+    "timestamp": "13-04-26 00:40:54",
+    "uid": "195b2fd1d89b8ad4",
+    "fid": "cb3ab1c506b48afb",
+    "amount": 100,
+    "dispute_flag": false
+  },
+  {
+    "transaction_id": "0cd44502174e066f760248ee1836cf747e629849a9d1475e7bab081b9be0ec95",
+    "prev_block_hash": "0cd44502174e066f760248ee1836cf747e629849a9d1475e7bab081b9be0ec95",
+    "timestamp": "13-04-26 00:40:54",
+    "uid": "195b2fd1d89b8ad4",
+    "fid": "cb3ab1c506b48afb",
+    "amount": 100,
+    "dispute_flag": true
+  }
+]
+# --- franchise.py ---
+import os
+import datetime
+import hashlib
+from PIL import Image
+import random
+# from grid import Grid
+
+class Franchise:
+  def __init__(self, f_name, f_acc_num, f_zone_code, f_pwd, f_balance, grid):
+    self.f_name = f_name
+    self.f_acc_num = f_acc_num
+    self.f_zone_code = f_zone_code
+    self.f_pwd = f_pwd
+    self.f_balance = f_balance
+    self.f_time_acc_create = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+    self.grid = grid
+
+    self.fid = None # done in grid, if validated - so no dangling fids are there
+    self.req_validation_and_reg_w_grid()
+    self.vfid = None # done in kiosk
+    self.qr_code = None
+    self.hardware_failure_rate = 0.0  # 0-1 probability of hardware failure
+
+  def req_validation_and_reg_w_grid(self):
+    confirmation = self.grid.req_fran_validation(self)
+    if (confirmation == True):
+      print(f"Franchise '{self.f_name}' registered with FID: {self.fid}")
+    else:
+      print("Franchise validation failed")
+
+    # correction at end:
+    # confirmation() adds amount to f_balance regardless of whether the cable was successfully unlocked, which is slightly wrong logically (the balance update should be on the grid side, not the franchise side). Per the spec: "Grid Processing: funds are transferred to the Franchise." So balance update belongs in grid.add_block, not in franchise.confirmation. Remove self.f_balance += amount from confirmation().
+
+  def display_qrcode(self, qrcode_file_name):
+    try:
+      img = Image.open(os.path.join("qrcodes", qrcode_file_name))
+      self.qr_code = img
+      print(f"QR Code displayed: {qrcode_file_name}")
+      # In Streamlit, this will be handled differently
+      self.qr_code.show()
+    except Exception as e:
+      print(f"Error displaying QR code: {e}")
+
+  def confirmation(self, success, amount = 0):
+    if success:
+      # self.f_balance += amount
+      print(f"Transaction for {self.f_name} accepted.")
+      print("Attempting to unlock charging cable...")
+      status = self.unlock_charging_cable()
+      if status:
+        print(f"Charging cable unlocked successfully for {self.f_name}")
+        return True
+      else:
+        print(f"Charging cable unlock failed for {self.f_name} :(")
+        print("Hardware failure detected - refund will be triggered")
+        return False
+    else:
+      print(f"Transaction for {self.f_name} rejected.")
+      return None
+
+  def unlock_charging_cable(self):
+    # implement this
+    # True if unlocked, False if failed to unlock
+    try:
+      # Log the unlock attempt
+      timestamp = datetime.datetime.now().strftime("%d-%m-%y %H:%M:%S")
+      print(f"Hardware - Unlock attempt at {timestamp}")
+
+      # Simulate network latency
+      import time
+      time.sleep(0.1)
+
+      # Simulate hardware failure with configurable probability
+      # hardware_failure_rate: 0.0 = always succeed, 1.0 = always fail
+      failure_random = random.random()
+
+      if failure_random < self.hardware_failure_rate:
+        print(f"Hardware - Cable unlock mechanism failed (simulated failure)")
+        return False
+
+      # Simulate occasional random failures (1% chance by default if not configured)
+      if self.hardware_failure_rate == 0.0 and random.random() < 0.01:
+        print(f"Hardware - Unexpected hardware failure (1% random chance)")
+        return False
+
+      # Cable unlock succeeds
+      print(f"Hardware - Cable unlock mechanism SUCCEEDED")
+      print(f"Hardware - Charging session active - User can now charge vehicle")
+
+      return True
+
+    except Exception as e:
+      print(f"Hardware - Cable unlock error: {e}")
+      return False
+
+if __name__ == "__main__":
+  from grid import Grid
+
+  PASS = "✓"
+  FAIL = "✗"
+
+  def check(label, condition):
+    status = PASS if condition else FAIL
+    print(f"  [{status}] {label}")
+    if not condition:
+      raise AssertionError(f"FAILED: {label}")
+
+  print("\n" + "=" * 55)
+  print("  franchise.py — self-test")
+  print("=" * 55)
+
+  grid = Grid()
+
+  # ── 1. Valid registration ─────────────────────────────────
+  print("\n[Test 1] Valid franchise (Z1)")
+  fr = Franchise("StationAlpha", "ACC001", "Z1", "pwd", 500, grid)
+  check("FID set",               fr.fid is not None)
+  check("FID length 16",         len(fr.fid) == 16)
+  check("In grid registry",      fr.fid in grid.franchises)
+  check("Balance unchanged",     fr.f_balance == 500)
+  check("vfid starts None",      fr.vfid is None)
+
+  # ── 2. Invalid zone code ──────────────────────────────────
+  print("\n[Test 2] Invalid zone code (Z9)")
+  fr_bad = Franchise("BadStation", "ACC002", "Z09", "pwd", 100, grid)
+  check("FID is None",           fr_bad.fid is None)
+  check("Not in registry",       fr_bad.fid not in grid.franchises)
+
+  # ── 3. confirmation() success path ───────────────────────
+  print("\n[Test 3] confirmation() — success")
+  bal_before = fr.f_balance
+  result = fr.confirmation(True, 200)
+  check("Returns True", result == True)
+
+  # ── 4. confirmation() failure path ───────────────────────
+  print("\n[Test 4] confirmation() — failure")
+  result = fr.confirmation(False, 200)
+  check("Returns None", result is None)
+
+  # ── 5. unlock_charging_cable directly ────────────────────
+  print("\n[Test 5] unlock_charging_cable()")
+  # Set high success rate for testing
+  fr.hardware_failure_rate = 0.0
+  check("Returns True when configured to succeed",  fr.unlock_charging_cable()  == True)
+
+  # Set high failure rate for testing
+  fr.hardware_failure_rate = 1.0
+  check("Returns False when configured to fail", fr.unlock_charging_cable() == False)
+
+  # ── 6. Two franchises — independent balances ─────────────
+  print("\n[Test 6] Two franchises are independent")
+  fr2 = Franchise("StationBeta", "ACC003", "Z2", "pwd2", 1000, grid)
+  check("Different FIDs",        fr.fid != fr2.fid)
+  check("Beta balance correct",  fr2.f_balance == 1000)
+  check("Alpha unaffected",      fr.f_balance  == 500)
+
+  print("\n" + "=" * 55)
+  print("  All franchise.py tests passed ✓")
+  print("=" * 55 + "\n")
+
+# --- grid.py ---
+import os
+import datetime
+import hashlib
+from ascon_lwc import ascon_encrypt
+import json
+
+class Grid:
+  def __init__(self):
+    self.providers = ["Tata", "Adani", "ChargePoint"]
+    self.zones = {"Z1": "Tata", "Z2": "Tata", "Z3": "Tata", # f_zone_code, provider_name
+                  "Z4": "Adani", "Z5": "Adani", "Z6": "Adani",
+                  "Z7": "ChargePoint", "Z8": "ChargePoint", "Z9": "ChargePoint"}
+    self.users = {} # uid, user_obj
+    self.franchises = {} # fid, fran_obj
+    self.blockchain = [] # block dicts
+
+  def sha3_algo(self, message):
+    # can we just import it? or should we code it out? - importing. DONE
+    try:
+      return hashlib.sha3_256(message.encode("utf-8")).hexdigest()
+    except:
+      return "Could not hash"
+    # this returns hex code
+
+  def generate_fid(self, f_name, f_time_acc_create, f_pwd):
+    message = f"{f_name}, {f_time_acc_create}, {f_pwd}"
+    return self.sha3_algo(message)[:16]
+    # fid - unique to every station and shouldn’t be shared
+
+  def generate_vfid(self, fid, timestamp):
+    # implement using lwc algo, below is placeholder
+    key = b"RaksAditPriyVeda"
+    nonce = timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+    # nonce - number used once; ensures same input != same output and prevents replay attacks
+    pt = fid.encode("utf-8") # actua data to protect
+    ad = timestamp.encode("utf-8")
+    # associated data is: data that is NOT encrypted, but is authenticated
+    # timestamp is not hidden but cannot be tampered with
+    vfid = ascon_encrypt(key, nonce, ad, pt)
+
+    return vfid.hex()
+
+  def req_fran_validation(self, f_obj = None):
+    req_fields = [f_obj.f_name, f_obj.f_pwd, f_obj.f_balance, f_obj.f_time_acc_create]
+
+    if f_obj.f_zone_code in self.zones and all(x is not None for x in req_fields):
+      return self.register_franchise(f_obj)
+    else:
+      return False
+
+  def req_user_validation(self, u_obj = None):
+    req_fields = [u_obj.u_name, u_obj.u_phone, u_obj.u_pin, u_obj.u_balance]
+
+    if u_obj.u_zone_code in self.zones and all(x is not None for x in req_fields):
+      return self.register_user(u_obj)
+    else:
+      return False
+
+  def register_franchise(self, franchise):
+    fid = self.generate_fid(franchise.f_name, franchise.f_time_acc_create, franchise.f_pwd)
+    franchise.fid = fid
+    # franchise.grid = self
+    self.franchises[franchise.fid] = franchise
+    return True
+
+  def register_user(self, user):
+    message = f"{user.u_name}, {user.u_phone}, {user.u_pin}"
+    uid = self.sha3_algo(message)[:16] # unique to every station and shouldn’t be shared
+    user.uid = uid
+    user.vmid = f"{uid}_{user.u_phone}"
+    # user.grid = self
+    self.users[user.uid] = user
+    return True
+
+  def validate_transaction(self, fid, vmid, pin, amount):
+    if fid not in self.franchises:
+      print("FID not found in franchises")
+      return False
+
+    for user in self.users.values():
+      if user.vmid == vmid and user.u_pin == pin:
+        if user.u_balance >= amount:
+          user.u_balance -= amount
+          self.franchises[fid].f_balance += amount
+
+          ts = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+          bl = self.add_block(user.uid, fid, ts, amount)
+          if (bl == None):
+            print(f"Block of FID {fid} representing a successful transaction could not be added to blockchain")
+            return False
+          return True
+    return False
+
+  # Add to grid.py
+  def save_blockchain(self):
+    import json
+    with open("blockchain_ledger.json", "w") as f:
+      json.dump(self.blockchain, f, indent=2)
+
+  def load_blockchain(self):
+    import json
+    try:
+      with open("blockchain_ledger.json", "r") as f:
+        self.blockchain = json.load(f)
+    except FileNotFoundError:
+      self.blockchain = []
+
+  def add_block(self, uid, fid, timestamp, amount, dispute = False): # disp_flag : T for a refund block
+    try:
+      t_id_msg = f"{uid}, {fid}, {timestamp}, {amount}"
+      prev_hash = self.blockchain[-1]["transaction_id"] if len(self.blockchain) > 0 else ("0" * 64)
+      block = {
+                "transaction_id" : self.sha3_algo(t_id_msg),
+                "prev_block_hash" : prev_hash,
+                "timestamp" : timestamp,
+                "uid" : uid,
+                "fid" : fid,
+                "amount" : amount,
+                "dispute_flag" : dispute
+              }
+      self.blockchain.append(block)
+      self.save_blockchain() # save after every new block
+      x = "successful transaction" if dispute == False else "refund"
+      print(f"Block of FID {fid} representing a {x} added to blockchain")
+      return block
+    except:
+      return None
+
+  def process_refund(self, uid, fid, amount):
+    if fid not in self.franchises:
+      print("FID not found in franchises")
+      return None
+
+    for user in self.users.values():
+      if user.uid == uid:
+        user.u_balance += amount
+        self.franchises[fid].f_balance -= amount
+        ts = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+        return ts
+
+    return None
+
+  def add_reverse_block(self, uid, fid, amount, dispute = True):
+    # called when payment succeeds but hardware fails to dispense power. reverses the balance and records a dispute block.
+    ts = self.process_refund(uid, fid, amount)
+    if ts is None:
+      print("Refund failed - either FID or user not found")
+      return None
+
+    return self.add_block(uid, fid, ts, amount, True)
+
+  def verify_chain(self):
+    """
+    Walks every block and checks:
+      1. txn_id matches a fresh SHA3 of its own data fields.
+      2. prev_hash matches the txn_id of the preceding block.
+    Returns True if chain is intact, False if tampered.
+    """
+    for i, block in enumerate(self.blockchain):
+      expected_txid = self.sha3_algo(
+        f"{block['uid']}, {block['fid']}, {block['timestamp']}, {block['amount']}"
+      )
+      if block["transaction_id"] != expected_txid:
+        print(f"[Chain] TAMPERED at block {i} — txn_id mismatch!")
+        return False
+
+      expected_prev = self.blockchain[i - 1]["transaction_id"] if i > 0 else "0" * 64
+      if block["prev_block_hash"] != expected_prev:
+        print(f"[Chain] BROKEN LINK at block {i} — prev_hash mismatch!")
+        return False
+
+    print(f"[Chain] Chain intact — {len(self.blockchain)} block(s) verified.")
+    return True
+
+if __name__ == "__main__":
+  # Import here to avoid circular imports at module level
+  from user import User
+  from franchise import Franchise
+
+  PASS = "✓ "
+  FAIL = "✗"
+
+  def check(label, condition):
+    status = PASS if condition else FAIL
+    print(f"  [{status}] {label}")
+    if not condition:
+      raise AssertionError(f"FAILED: {label}")
+
+  print("\n" + "=" * 55)
+  print("  grid.py — self-test")
+  print("=" * 55)
+
+  grid = Grid()
+
+  # ── 1. Valid franchise registration ──────────────────────
+  print("\n[Test 1] Valid franchise registration")
+  fr1 = Franchise("StationAlpha", "ACC001", "Z1", "secret", 1000, grid)
+  check("FID is set",           fr1.fid is not None)
+  check("FID is 16 chars",      len(fr1.fid) == 16)
+  check("Franchise in registry", fr1.fid in grid.franchises)
+
+  # ── 2. Invalid zone code ──────────────────────────────────
+  print("\n[Test 2] Franchise with invalid zone code (Z19)")
+  fr_bad = Franchise("BadStation", "ACC002", "Z19", "secret", 500, grid)
+  check("FID is None for bad zone", fr_bad.fid is None)
+  check("Not in registry",          fr_bad.fid not in grid.franchises)
+
+  # ── 3. Valid user registration ────────────────────────────
+  print("\n[Test 3] Valid user registration")
+  u1 = User("Alice", 9000000001, "4321", "Z1", grid, 800)
+  check("UID is set",   u1.uid  is not None)
+  check("VMID is set",  u1.vmid is not None)
+  check("VMID format",  u1.vmid == f"{u1.uid}_{u1.u_phone}")
+  check("User in registry", u1.uid in grid.users)
+
+  # ── 4. User missing required field ───────────────────────
+  print("\n[Test 4] User with None name (should fail validation)")
+  u_bad = User(None, 9000000002, "0000", "Z2", grid, 100)
+  check("UID is None",  u_bad.uid  is None)
+  check("VMID is None", u_bad.vmid is None)
+
+  # ── 5. Valid transaction ──────────────────────────────────
+  print("\n[Test 5] Valid transaction (₹200)")
+  bal_u_before  = u1.u_balance
+  bal_fr_before = fr1.f_balance
+  ok = grid.validate_transaction(fr1.fid, u1.vmid, u1.u_pin, 200)
+  check("Returns True",                 ok)
+  check("User balance deducted",        u1.u_balance  == bal_u_before  - 200)
+  check("Franchise balance credited",   fr1.f_balance == bal_fr_before + 200)
+  check("Block added to chain",         len(grid.blockchain) == 1)
+  check("Block has correct amount",     grid.blockchain[-1]["amount"] == 200)
+  check("Block not a refund",           grid.blockchain[-1]["dispute_flag"] == False)
+
+  # ── 6. Insufficient balance ───────────────────────────────
+  print("\n[Test 6] Insufficient balance (₹99999)")
+  ok = grid.validate_transaction(fr1.fid, u1.vmid, u1.u_pin, 99999)
+  check("Returns False",                not ok)
+  check("No new block added",           len(grid.blockchain) == 1)
+
+  # ── 7. Wrong PIN ──────────────────────────────────────────
+  print("\n[Test 7] Wrong PIN")
+  ok = grid.validate_transaction(fr1.fid, u1.vmid, "WRONG", 50)
+  check("Returns False", not ok)
+
+  # ── 8. Unknown FID ────────────────────────────────────────
+  print("\n[Test 8] Unknown FID")
+  ok = grid.validate_transaction("FAKEFID000000000", u1.vmid, u1.u_pin, 50)
+  check("Returns False", not ok)
+
+  # ── 9. Second franchise and cross-payment ────────────────
+  print("\n[Test 9] Second franchise (Z2), second user, cross-payment")
+  fr2 = Franchise("StationBeta", "ACC003", "Z2", "pwd2", 0, grid)
+  u2  = User("Bob", 9000000003, "9999", "Z2", grid, 300)
+  ok  = grid.validate_transaction(fr2.fid, u2.vmid, u2.u_pin, 150)
+  check("Returns True",               ok)
+  check("Bob's balance is 150",       u2.u_balance  == 150)
+  check("Beta franchise credited",    fr2.f_balance == 150)
+  check("Second block added",         len(grid.blockchain) == 2)
+
+  # ── 10. Reverse block (refund) ────────────────────────────
+  print("\n[Test 10] Reverse block — hardware failure after payment")
+  # First make a payment to refund
+  grid.validate_transaction(fr1.fid, u1.vmid, u1.u_pin, 100)
+  bal_u  = u1.u_balance
+  bal_fr = fr1.f_balance
+  grid.add_reverse_block(u1.uid, fr1.fid, 100)
+  check("User refunded",              u1.u_balance  == bal_u  + 100)
+  check("Franchise debited",          fr1.f_balance == bal_fr - 100)
+  check("Refund block has flag=True", grid.blockchain[-1]["dispute_flag"] == True)
+
+  # ── 11. Reverse block with bad UID ────────────────────────
+  print("\n[Test 11] Reverse block with unknown UID")
+  result = grid.add_reverse_block("BADUID000000000", fr1.fid, 50)
+  check("Returns None", result is None)
+
+  # ── 12. Reverse block with bad FID ────────────────────────
+  print("\n[Test 12] Reverse block with unknown FID")
+  result = grid.add_reverse_block(u1.uid, "BADFID000000000", 50)
+  check("Returns None", result is None)
+
+  # ── 13. Chain integrity ───────────────────────────────────
+  print("\n[Test 13] Chain integrity — unmodified")
+  check("Chain valid", grid.verify_chain())
+
+  # ── 14. Tamper detection ──────────────────────────────────
+  print("\n[Test 14] Tamper detection — modify block amount")
+  original_amount = grid.blockchain[0]["amount"]
+  grid.blockchain[0]["amount"] = 999999
+  check("Chain detects tampering", not grid.verify_chain())
+  grid.blockchain[0]["amount"] = original_amount  # restore
+
+  # ── 15. VFID generation ───────────────────────────────────
+  print("\n[Test 15] VFID generation via ASCON")
+  ts   = "01-04-26 12:00:00"
+  vfid = grid.generate_vfid(fr1.fid, ts)
+  check("VFID is a hex string",      isinstance(vfid, str))
+  check("Different fid --> diff vfid", grid.generate_vfid(fr2.fid, ts) != vfid)
+  check("Different ts --> diff vfid",  grid.generate_vfid(fr1.fid, "02-04-26 12:00:00") != vfid)
+
+  print("\n" + "=" * 55)
+  print("  All grid.py tests passed ✓")
+  print("=" * 55 + "\n")
+
+# --- kiosk.py ---
+import os
+import datetime
+import hashlib
+import qrcode
+import cv2
+from PIL import Image
+import time
+
+from ascon_lwc import ascon_decrypt
+# from pyzbar.pyzbar import decode
+
+import shor_algo
+import rsa
+# from grid import Grid
+# from franchise import Franchise
+
+class Kiosk:
+  def __init__(self, grid, franchise):
+    self.grid = grid
+    self.franchise = franchise
+    self.timestamp = None
+
+  def generate_qrcode(self):
+    # hashed_fid - data to encode in the QR code
+    fid = self.franchise.fid
+
+    self.timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
+    vfid = self.grid.generate_vfid(fid, self.timestamp)
+    self.franchise.vfid = vfid
+
+    qr_data = f"{vfid}, {self.timestamp}"
+
+    # Generate the QR code image using the make() shortcut function
+    qr = qrcode.make(qr_data)
+    qr = qr.convert('RGB')
+
+    # Save Image
+    os.makedirs("qrcodes", exist_ok=True)
+    qr_filename = f"qrcodes/qrcode_xxxxxx{vfid[-6:]}.png"
+    qr.save(qr_filename)
+
+    time.sleep(0.1)  # Ensure filesystem flush
+    if not os.path.exists(qr_filename):
+      print(f"ERROR: QR code file was not saved: {qr_filename}")
+      return
+
+    print(f"QR code generated and saved as qrcode_xxxxxx{vfid[-6:]}.png in the folder 'qrcodes'")
+    self.franchise.display_qrcode(f"qrcode_xxxxxx{vfid[-6:]}.png")
+
+  def decrypt_qrcode(self, decoded_qr_data):
+    # and verify hash???
+
+    # 1. load and decode the qr code
+    # img = Image.open(os.path.join("qrcodes", qrcode_file_name))
+    # decoded_objects = decode(img)
+
+    '''
+    img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
+    detector = cv2.QRCodeDetector()
+    decoded_qr_data, _, _ = detector.detectAndDecode(img)
+    '''
+
+    # print(decoded_qr_data)
+    # print(type(decoded_qr_data))
+
+    if not decoded_qr_data:
+      print("QR decode failed")
+      return None, None
+
+    # 2. extract the data
+    # for obj in decoded_objects:
+    #   scanned_hash = obj.data.decode('utf-8')
+    #   print(f"Scanned Hash: {scanned_hash}")
+    # data = decoded_object.decode('utf-8')
+
+    # Step 2: Split VFID and timestamp
+    try:
+      parts = decoded_qr_data.split(", ")
+      if len(parts) != 2:
+        print("Invalid QR format, line 68")
+        return None, None
+
+      vfid_hex = parts[0].strip()
+      ts = parts[1].strip()
+
+      # print("Original vfid (first 10 bytes):", self.franchise.vfid[:20])
+      # print("Decoded vfid (first 10 bytes):", vfid_hex[:20])
+      # print(self.franchise.vfid == vfid_hex)
+
+      vfid_from_decoded_qr = bytes.fromhex(vfid_hex)
+
+    except:
+      print("Invalid QR format")
+      return None, None
+
+    try:
+      if (ts == self.timestamp):
+        # NOTE: To "verify", you must re-hash known data and check if the hashes match.
+
+        key = b"RaksAditPriyVeda"
+        nonce = self.timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+        # nonce - number used once; ensures same input != same output and prevents replay attacks
+        ad = self.timestamp.encode("utf-8")
+
+        # step: Decrypt
+        pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
+        fid = pt.decode()
+
+        if (fid == self.franchise.fid):
+          return True, fid # placeholder
+        else:
+          raise Exception("FIDs don't match")
+          # return False, None # placeholder
+      else:
+        raise Exception("Timestamps don't match")
+
+    except Exception as e:
+      print(f"{e}")
+      print("Decryption failed --> tampered QR")
+      return None, None
+
+  def process_payment(self, payload):
+    # payload is rsa-hashed vmid, pin, so we have to use shor's to decrypt
+    """
+    TO IMPLEMENT:
+
+    Full payment flow:
+      1. Verify QR code authenticity via ASCON decryption.
+      2. Decrypt VMID and PIN from the RSA-encrypted payload.
+      3. Forward auth request to the Grid.
+      4. Attempt to unlock the charging cable.
+      5. If cable unlock fails after a successful payment --> trigger refund.
+
+    Edge cases handled:
+      - Invalid / tampered QR --> reject immediately.
+      - Grid rejects (bad PIN / balance / VMID) --> inform franchise.
+      - Payment approved but hardware fails --> call add_reverse_block.
+    """
+    """
+    confirmation, fid_from_decrypt = self.decrypt_qrcode(payload["QR_raw_data"])
+
+    if (confirmation == False or fid_from_decrypt != fid):
+      print("Payment failed due to invalid QR")
+      self.franchise.confirmation(False)
+      return
+
+    elif (confirmation == True and fid_from_decrypt == fid):
+      vmid = rsa.decrypt_string(payload["VMID_enc"], payload["_rsa_d"], payload["rsa_n"])
+      pin = rsa.decrypt_string(payload["PIN_enc"], payload["_rsa_d"], payload["rsa_n"])
+
+      success = self.grid.validate_transaction(fid, vmid, pin, payload["amount"])
+      status = self.franchise.confirmation(success, payload["amount"])
+      if (success and status == False):
+        self.grid.add_reverse_block(uid, fid, payload["amount"])
+    """
+    if payload is None:
+      print("[Kiosk] Payment aborted — no payload (QR scan failed).")
+      self.franchise.confirmation(False, 0)
+      return {
+        "success": False,
+        "reason": "No payload exists",
+        "transaction_id": None
+      }
+
+    fid = self.franchise.fid
+    amount = payload["amount"]
+
+    # Step 1: Verify QR Code Authenticity
+    print("\n[Step 1] Verifying QR Code...")
+    confirmation, fid_from_decrypt = self.decrypt_qrcode(payload["QR_raw_data"])
+
+    if confirmation is None or confirmation == False or fid_from_decrypt != fid:
+      print("✗ Payment FAILED: Invalid or tampered QR code")
+      self.franchise.confirmation(False, 0)
+      return {
+        "success": False,
+        "reason": "Invalid or tampered QR code",
+        "transaction_id": None
+      }
+
+    print("✓ QR Code verified")
+
+    # Step 2: Decrypt VMID and PIN from RSA payload
+    print("\n[Step 2] Decrypting credentials from RSA payload...")
+    try:
+      vmid = rsa.decrypt_string(payload["VMID_enc"], payload["_rsa_d"], payload["rsa_n"])
+      pin = rsa.decrypt_string(payload["PIN_enc"], payload["_rsa_d"], payload["rsa_n"])
+      print(f"✓ Credentials decrypted - VMID: {vmid}, PIN: {pin}")
+    except Exception as e:
+      print(f"✗ Payment FAILED: Could not decrypt credentials: {e}")
+      self.franchise.confirmation(False, 0)
+      return {
+        "success": False,
+        "reason": f"RSA decryption failed: {e}",
+        "transaction_id": None
+      }
+
+    # Step 3: Forward authorization request to Grid
+    print("\n[Step 3] Requesting authorization from Grid Authority...")
+    success = self.grid.validate_transaction(fid, vmid, pin, payload["amount"])
+
+    if not success:
+      print("✗ Grid Authority REJECTED the transaction")
+      print("  Reasons could be: Invalid PIN, Insufficient balance, Unknown VMID")
+      self.franchise.confirmation(False, 0)
+      return {
+        "success": False,
+        "reason": "Grid Authority rejected transaction",
+        "transaction_id": None
+      }
+
+    print("✓ Grid Authority APPROVED the transaction")
+
+    # Step 4: Attempt to unlock charging cable
+    print("\n[Step 4] Attempting to unlock charging cable...")
+    status = self.franchise.confirmation(success, payload["amount"])
+
+    if status is False:
+      print("✗ Hardware FAILED: Cable unlock failed after successful payment")
+      print("  Triggering automatic refund...")
+
+      # Step 5: Handle hardware failure - trigger refund
+      uid = None
+      for u_id, user in self.grid.users.items():
+        if user.vmid == vmid:
+          uid = u_id
+
+      if not uid:
+        return {
+          "success": False,
+          "reason": "UID not found",
+          "transaction_id": None
+        }
+      refund_block = self.grid.add_reverse_block(uid, fid, payload["amount"])
+
+      if refund_block is not None:
+        print("✓ Refund processed successfully")
+        return {
+          "success": False,
+          "reason": "Hardware failure - automatic refund triggered",
+          "transaction_id": None,
+          "refund": True
+        }
+      else:
+        print("✗ Refund FAILED")
+        return {
+          "success": False,
+          "reason": "Hardware failure - refund processing failed",
+          "transaction_id": None
+        }
+
+    # Payment Success
+    print("\n" + "="*60)
+    print("✓✓✓ PAYMENT SUCCESSFUL ✓✓✓")
+    print("="*60)
+
+    # Step 6: Demonstrate Quantum Vulnerability (Educational)
+    print("\n[Step 5] Quantum Cryptography Vulnerability Demonstration")
+    print("-" * 60)
+    print("Showing how Shor's algorithm breaks the RSA key used for this transaction...")
+    try:
+      shor_algo.demonstrate_attack(payload)
+    except Exception as e:
+      print(f"Note: Shor's algorithm demo encountered: {e}")
+
+    print("-" * 60)
+
+    return {
+      "success": True,
+      "reason": "Payment successful - cable unlocked",
+      "transaction_id": self.grid.blockchain[-1]["transaction_id"] if self.grid.blockchain else None,
+      "amount": payload["amount"]
+    }
+
+if __name__ == "__main__":
+  # Self-test would go here
+  pass
+
+# --- main.py ---
+import sys
+
+from grid import Grid
+from franchise import Franchise
+from kiosk import Kiosk
+from user import User
+from tabulate import tabulate
+
+import shor_algo
+
+# def print_users(grid):
+#   print("\n--- USERS ---")
+#   print(f"{'UID':<20} {'Name':<10} {'Phone':<12} {'Balance':<10}")
+#   for u in grid.users.values():
+#     print(f"{u.uid:<20} {u.u_name:<10} {u.u_phone:<12} {u.u_balance:<10}")
+
+# def print_franchises(grid):
+#   print("\n--- FRANCHISES ---")
+#   print(f"{'FID':<20} {'Name':<10} {'Zone':<5} {'Balance':<10}")
+#   for f in grid.franchises.values():
+#     print(f"{f.fid:<20} {f.f_name:<10} {f.f_zone_code:<5} {f.f_balance:<10}")
+
+# def print_blockchain(grid):
+#   print("\n--- BLOCKCHAIN ---")
+#   print(f"{'TxnID':<20} {'UID':<20} {'FID':<20} {'Amount':<10}")
+#   for b in grid.blockchain:
+#     print(f"{b['transaction_id'][:16]:<20} {b['uid']:<20} {b['fid']:<20} {b['amount']:<10}")
+
+def display_users(grid):
+  table = []
+  for u in grid.users.values():
+    table.append([u.uid, u.u_name, u.u_phone, u.u_balance, u.grid])
+
+  print("\n--- USERS ---")
+  print(tabulate(table, headers=["UID", "Name", "Phone", "Balance", "Grid"], tablefmt="grid"))
+
+def display_franchises(grid):
+  table = []
+  for f in grid.franchises.values():
+    table.append([f.fid, f.f_name, f.f_zone_code, f.f_balance])
+
+  print("\n--- FRANCHISES ---")
+  print(tabulate(table, headers=["FID", "Name", "Zone", "Balance"], tablefmt="grid"))
+
+def display_blockchain(grid):
+  table = []
+  for b in grid.blockchain:
+    table.append([
+      b["transaction_id"][:16],
+      b["uid"],
+      b["fid"],
+      b["amount"],
+      b["dispute_flag"]
+    ])
+
+  print("\n--- BLOCKCHAIN ---")
+  print(tabulate(table, headers=["TxnID", "UID", "FID", "Amount", "Refund"], tablefmt="grid"))
+
+if __name__ == "__main__":
+  print("\n" + "~"*65)
+  print("  Centralized EV Charging Payment Gateway — Full Demo")
+  print("~"*65)
+
+  # ────────────────────────────────────────────────────────────
+  print("1. Grid Initialization — 3 providers, 9 zones")
+  # ────────────────────────────────────────────────────────────
+  grid = Grid()
+  print(f"[Grid] Zones: {list(grid.zones.keys())}")
+
+  # ────────────────────────────────────────────────────────────
+  print("2. Franchise Registrations (one per zone)")
+  # ────────────────────────────────────────────────────────────
+  fr_z1 = Franchise("PowerStop_Hyd",     "ACC001", "Z1", "pwd1", 5000, grid)
+  fr_z4 = Franchise("ChargeHub_Del",     "ACC004", "Z4", "pwd4", 3000, grid)
+  fr_z7 = Franchise("VoltPoint_Mum",     "ACC007", "Z7", "pwd7", 8000, grid)
+
+  print("\n[Scenario] Invalid zone code (Z99):")
+  fr_bad = Franchise("GhostStation", "ACC999", "Z99", "badpwd", 100, grid)
+  assert fr_bad.fid is None
+  print("  --> Correctly rejected.")
+  display_franchises(grid)
+
+  # ────────────────────────────────────────────────────────────
+  print("3. User Registrations (no zone restriction)")
+  # ────────────────────────────────────────────────────────────
+  u1 = User("Rakshita", 9999999991, "1234", "Z1", grid, 1000)
+  u2 = User("Aditya",   9999999992, "5678", "Z2", grid, 500)
+  u3 = User("Priya",    9999999993, "4321", "Z3", grid, 250)
+  u4 = User("Vedant",   9999999994, "9999", "Z4", grid, 0)     # zero balance
+
+  print("\n[Scenario] None name --> rejected:")
+  u_bad = User(None, 0000000000, "0000", "Z0", grid, 100)
+  assert u_bad.uid is None
+  print("  --> Correctly rejected.")
+  display_users(grid)
+
+  # ────────────────────────────────────────────────────────────
+  print("4. Kiosk Setup & QR Generation")
+  # ────────────────────────────────────────────────────────────
+  kiosk_z1 = Kiosk(grid, fr_z1)
+  kiosk_z4 = Kiosk(grid, fr_z4)
+  kiosk_z7 = Kiosk(grid, fr_z7)
+
+  kiosk_z1.generate_qrcode()
+  kiosk_z4.generate_qrcode()
+  kiosk_z7.generate_qrcode()
+
+  qr_z1 = f"qrcode_xxxxxx{fr_z1.vfid[-6:]}.png"
+  qr_z4 = f"qrcode_xxxxxx{fr_z4.vfid[-6:]}.png"
+  qr_z7 = f"qrcode_xxxxxx{fr_z7.vfid[-6:]}.png"
+
+  # ────────────────────────────────────────────────────────────
+  print("5. Successful Payments (cross-zone allowed)")
+  # ────────────────────────────────────────────────────────────
+  print("\n[A] Rakshita --> Z1/Tata (₹200)")
+  r = kiosk_z1.process_payment(u1.charge_request(qr_z1, 200))
+  assert r["success"] and u1.u_balance == 800 and fr_z1.f_balance == 5200
+
+  print("\n[B] Aditya --> Z4/Adani (₹150)")
+  r = kiosk_z4.process_payment(u2.charge_request(qr_z4, 150))
+  assert r["success"] and u2.u_balance == 350 and fr_z4.f_balance == 3150
+
+  print("\n[C] Priya --> Z7/ChargePoint (₹100)")
+  r = kiosk_z7.process_payment(u3.charge_request(qr_z7, 100))
+  assert r["success"] and u3.u_balance == 150 and fr_z7.f_balance == 8100
+
+  print("\n[D] Rakshita charges again at Z1 (₹300)")
+  r = kiosk_z1.process_payment(u1.charge_request(qr_z1, 300))
+  assert r["success"] and u1.u_balance == 500
+
+  print("\n[E] Aditya charges at Z1 (cross-provider, still valid)")
+  r = kiosk_z1.process_payment(u2.charge_request(qr_z1, 100))
+  assert r["success"] and u2.u_balance == 250
+
+  # ────────────────────────────────────────────────────────────
+  print("6. Edge Cases — Failed Payments")
+  # ────────────────────────────────────────────────────────────
+  print("\n[Edge 1] Vedant (₹0 balance) tries ₹100:")
+  r = kiosk_z1.process_payment(u4.charge_request(qr_z1, 100))
+  assert not r["success"] and u4.u_balance == 0
+  print("  --> Correctly rejected.")
+
+  print("\n[Edge 2] Wrong PIN:")
+  from rsa import generate_keys, encrypt_string
+  e2, d2, n2  = generate_keys()
+  raw_z1      = u2.scan_qrcode(qr_z1)
+  bad_payload = {
+    "QR_raw_data" : raw_z1,
+    "VMID_enc"    : encrypt_string(u2.vmid, e2, n2),
+    "PIN_enc"     : encrypt_string("0000", e2, n2),
+    "amount"      : 50,
+    "rsa_e": e2, "rsa_n": n2, "_rsa_d": d2,
+  }
+  r = kiosk_z1.process_payment(bad_payload)
+  assert not r["success"]
+  print("  --> Correctly rejected.")
+
+  print("\n[Edge 3] Priya overspend (has ₹150, requests ₹200):")
+  r = kiosk_z7.process_payment(u3.charge_request(qr_z7, 200))
+  assert not r["success"] and u3.u_balance == 150
+  print("  --> Correctly rejected.")
+
+  print("\n[Edge 4] None payload (scan failed):")
+  r = kiosk_z1.process_payment(None)
+  assert not r["success"]
+  print("  --> Cleanly aborted.")
+
+  print("\n[Edge 5] Tampered QR string in payload:")
+  t_payload = u1.charge_request(qr_z1, 50)
+  t_payload["QR_raw_data"] = f"deadbeef0000000000000000, {kiosk_z1.timestamp}"
+  r = kiosk_z1.process_payment(t_payload)
+  assert not r["success"]
+  print("  --> Correctly rejected.")
+
+  print("\n[Edge 6] Replay attack — stale timestamp:")
+  old_ts   = "01-01-20 00:00:00"
+  old_vfid = grid.generate_vfid(fr_z1.fid, old_ts)
+  r_payload = u1.charge_request(qr_z1, 50)
+  r_payload["QR_raw_data"] = f"{old_vfid}, {old_ts}"
+  r = kiosk_z1.process_payment(r_payload)
+  assert not r["success"]
+  print("  --> Correctly rejected.")
+
+  # ────────────────────────────────────────────────────────────
+  print("7. Hardware Failure --> Refund (Reverse Block)")
+  # ────────────────────────────────────────────────────────────
+  print("\n[Edge 7] Rakshita pays ₹100 but cable fails:")
+  bal_u_pre  = u1.u_balance
+  bal_fr_pre = fr_z1.f_balance
+  fr_z1.hardware_failure_rate = 1.0   # force failure
+  r = kiosk_z1.process_payment(u1.charge_request(qr_z1, 100))
+  fr_z1.hardware_failure_rate = 0.0   # restore
+  assert r.get("refund") == True
+  assert u1.u_balance  == bal_u_pre,  "User should be fully refunded"
+  assert fr_z1.f_balance == bal_fr_pre, "Franchise should be debited back"
+  assert grid.blockchain[-1]["dispute_flag"] == True
+  print("  --> Refund processed. Dispute block recorded.")
+
+  # ────────────────────────────────────────────────────────────
+  print("8. Shor's Algorithm Demo")
+  # ────────────────────────────────────────────────────────────
+  print("\n[Standalone demo] Weak key (p=61, q=53):")
+  shor_algo.demonstrate_attack()
+
+  print("\n[Real payload attack] Intercepting Aditya's next payment:")
+  shor_algo.demonstrate_attack(u2.charge_request(qr_z4, 50))
+
+  # ────────────────────────────────────────────────────────────
+  print("9. Blockchain Ledger & Chain Verification")
+  # ────────────────────────────────────────────────────────────
+  display_blockchain(grid)
+  valid = grid.verify_chain()
+  print(f"\n[Chain] Integrity: {'PASS ✓' if valid else 'FAIL ✗'}")
+  assert valid
+
+  # ────────────────────────────────────────────────────────────
+  print("10. Final Balances")
+  # ────────────────────────────────────────────────────────────
+  display_users(grid)
+  display_franchises(grid)
+
+  print("\n" + "~"*65)
+  print("  Demo complete.")
+  print("~"*65 + "\n")
+
+# --- requirements.txt ---
+pillow
+qrcode
+ascon
+opencv-python
+tabulate
+streamlit>=1.28.0
+# --- rsa.py ---
+import json
+
+# Python Program for implementation of RSA Algorithm
+# From: https://www.geeksforgeeks.org/computer-networks/rsa-algorithm-cryptography/
+
+# Function to find modular inverse of e modulo phi(n)
+# Here we are calculating phi(n) using Hit and Trial Method
+# but we can optimize it using Extended Euclidean Algorithm
+
+# RSA Key Generation
+def generate_keys():
+  p = 61 # 7919 # or 4563413
+  q = 53 # 1009 # or 3457631
+  n = p * q
+  phi = (p - 1) * (q - 1)
+
+  # Choose e, where 1 < e < phi(n) and gcd(e, phi(n)) == 1
+  # e = 0
+  # for e in range(2, phi):
+  #   if gcd(e, phi) == 1:
+  #     break
+  e = 65537               # standard public exponent — always coprime with phi here
+
+  # Compute d such that e * d ≡ 1 (mod phi(n))
+  # d = modInverse(e, phi)
+  d = pow(e, -1, phi)
+
+  return e, d, n
+
+# # Encrypt message using public key (e, n)
+# def encrypt(m, e, n):
+#   return pow(m, e, n)
+
+# # Decrypt message using private key (d, n)
+# def decrypt(c, d, n):
+#   return pow(c, d, n)
+
+# integer encrypt / decrypt
+def encrypt(m, e: int, n: int): # encrypt a single integer m. requires 0 <= m < n
+  #         m: int             -> int
+  if isinstance(m, int):
+    if not (0 <= m < n):
+      raise ValueError(f"Message {m} out of range [0, {n})")
+    return {"type": "int", "data": pow(m, e, n)}
+
+  elif isinstance(m, bytes):
+    return {"type": "bytes", "data": encrypt_bytes(m, e, n)}
+
+  elif isinstance(m, str):
+    return {"type": "str", "data": encrypt_bytes(m.encode("utf-8"), e, n)}
+
+  elif isinstance(m, dict):
+    return {"type": "dict", "data": encrypt_dict(m, e, n)}
+
+  else:
+    raise TypeError("Unsupported type")
+
+def decrypt(c, d: int, n: int): # decrypt a single integer m
+  #         c: int             -> int
+  if not isinstance(c, dict) or "type" not in c or "data" not in c:
+    raise ValueError("Invalid ciphertext format")
+
+  ctype = c["type"]
+  data = c["data"]
+
+  if ctype == "int":
+    return pow(data, d, n)
+
+  elif ctype == "bytes":
+    return decrypt_bytes(data, d, n)
+
+  elif ctype == "str":
+    return decrypt_bytes(data, d, n).decode("utf-8")
+
+  elif ctype == "dict":
+    return decrypt_dict(data, d, n)
+
+  else:
+    raise ValueError("Unknown ciphertext type")
+
+def encrypt_bytes(data: bytes, e: int, n: int) -> list[int]:
+  """
+  Encrypt a bytes object byte-by-byte.
+  Each byte value (0-255) is always < n (7,990,271), so no chunking needed.
+  Returns a list of ciphertext integers, one per byte.
+  """
+  return [pow(b, e, n) for b in data]
+
+def decrypt_bytes(ciphertext: list[int], d: int, n: int) -> bytes:
+  """Decrypt a list of ciphertext integers back to the original bytes."""
+  if not all(isinstance(c, int) for c in ciphertext):
+    raise ValueError("Invalid ciphertext format")
+
+  try:
+    return bytes(pow(c, d, n) for c in ciphertext)
+  except ValueError:
+    raise ValueError("Decryption failed: invalid key or corrupted data")
+
+def encrypt_string(s: str, e: int, n: int) -> list[int]:
+  """
+  Encrypt a UTF-8 string.
+  Converts to bytes first, then encrypts each byte.
+  Handles any Unicode string — not just ASCII.
+  """
+  return encrypt_bytes(s.encode("utf-8"), e, n)
+
+def decrypt_string(ciphertext: list[int], d: int, n: int) -> str:
+  """Decrypt a list of ciphertext integers back to the original UTF-8 string."""
+  return decrypt_bytes(ciphertext, d, n).decode("utf-8")
+
+def encrypt_dict(d_obj: dict, e: int, n: int) -> list[int]:
+  """
+  Encrypt an entire dict by serializing it to a JSON string first,
+  then encrypting the UTF-8 bytes of that string.
+
+  This is the realistic approach — the whole payload is treated as
+  one message, not field by field.
+
+  Assumption: all dict values must be JSON-serializable
+  (str, int, float, list, dict, bool, None).
+  """
+  json_str = json.dumps(d_obj, separators=(",", ":"), sort_keys=True)
+  return encrypt_string(json_str, e, n)
+
+def decrypt_dict(ciphertext: list[int], d: int, n: int) -> dict:
+  """Decrypt a list of ciphertext integers back to the original dict."""
+  json_str = decrypt_string(ciphertext, d, n)
+  return json.loads(json_str)
+
+# Main execution
+# if __name__ == "__main__":
+#   # Key Generation
+#   e, d, n = generate_keys()
+
+#   print(f"Public Key (e, n): ({e}, {n})")
+#   print(f"Private Key (d, n): ({d}, {n})")
+
+#   # Message
+#   M = "123"
+#   # M = {12, "Lara", 34.5}
+#   print(f"Original Message: {M}")
+
+#   # Encrypt the message
+#   C = encrypt(M, e, n)
+#   print(f"Encrypted Message: {C}")
+
+#   # Decrypt the message
+#   decrypted = decrypt(C, d, n)
+#   print(f"Decrypted Message: {decrypted}")
+
+if __name__ == "__main__":
+  PASS = "✓"
+  FAIL = "✗"
+
+  def check(label, condition):
+    status = PASS if condition else FAIL
+    print(f"  [{status}] {label}")
+    if not condition:
+      raise AssertionError(f"FAILED: {label}")
+
+  print("\n" + "=" * 55)
+  print("  rsa.py — self-test")
+  print("=" * 55)
+
+  e, d, n = generate_keys()
+
+  # ── 1. Key sanity ──────────────────────────────────────────
+  print("\n[Test 1] Key generation sanity")
+  phi = (61 - 1) * (53 - 1)
+  check("e > 1",               e > 1)
+  check("d > 1",               d > 1)
+  check("e*d ≡ 1 (mod phi)",   (e * d) % phi == 1)
+  check("n = 61*53",       n == 61 * 53)
+
+  # ── 2. Integer round-trip ─────────────────────────────────
+  print("\n[Test 2] Integer round-trip")
+  for m in [0, 1, 42, 255, 1000, 9999]:
+    check(f"m={m}", decrypt(encrypt(m, e, n), d, n) == m)
+
+  # ── 3. Integer out of range raises ────────────────────────
+  print("\n[Test 3] Integer out of range raises ValueError")
+  try:
+    encrypt(n, e, n)
+    check("Should have raised", False)
+  except ValueError:
+    check("Raised ValueError for m >= n", True)
+
+  # ── 4. Byte-level round-trip ──────────────────────────────
+  print("\n[Test 4] Bytes round-trip")
+  raw = b"Hello, EV World!"
+  ct  = encrypt_bytes(raw, e, n)
+  check("Ciphertext is list of ints",  all(isinstance(x, int) for x in ct))
+  check("Length preserved",            len(ct) == len(raw))
+  check("Round-trip correct",          decrypt_bytes(ct, d, n) == raw)
+
+  # ── 5. String round-trip — ASCII ──────────────────────────
+  print("\n[Test 5] String round-trip — ASCII")
+  s = "ABCD1234EFGH5678_9000000001"
+  ct = encrypt_string(s, e, n)
+  check("Returns list",        isinstance(ct, list))
+  check("Round-trip correct",  decrypt_string(ct, d, n) == s)
+
+  # ── 6. String round-trip — Unicode ───────────────────────
+  print("\n[Test 6] String round-trip — Unicode")
+  s_uni = "नमस्ते EV चार्जिंग"
+  ct    = encrypt_string(s_uni, e, n)
+  check("Unicode round-trips", decrypt_string(ct, d, n) == s_uni)
+
+  # ── 7. String — empty string ──────────────────────────────
+  print("\n[Test 7] Empty string")
+  ct = encrypt_string("", e, n)
+  check("Empty string --> empty list", ct == [])
+  check("Round-trip empty",          decrypt_string(ct, d, n) == "")
+
+  # ── 8. Dict round-trip — simple ───────────────────────────
+  print("\n[Test 8] Dict round-trip — simple")
+  payload = {"VMID": "ABC123_9000000001", "PIN": 1234, "amount": 200}
+  ct = encrypt_dict(payload, e, n)
+  check("Returns list",       isinstance(ct, list))
+  check("Round-trip correct", decrypt_dict(ct, d, n) == payload)
+
+  # ── 9. Dict round-trip — nested ───────────────────────────
+  print("\n[Test 9] Dict round-trip — nested / complex")
+  nested = {
+    "user"    : {"name": "Rakshita", "phone": "9999999991"},
+    "amount"  : 350.75,
+    "tags"    : ["ev", "charging", "zone1"],
+    "success" : True,
+    "extra"   : None,
+  }
+  ct = encrypt_dict(nested, e, n)
+  check("Nested dict round-trips", decrypt_dict(ct, d, n) == nested)
+
+  # ── 10. Different plaintexts --> different ciphertexts ──────
+  print("\n[Test 10] Different inputs produce different ciphertexts")
+  ct1 = encrypt_string("hello", e, n)
+  ct2 = encrypt_string("world", e, n)
+  check("Different strings --> different CT", ct1 != ct2)
+
+  # ── 11. Encryption is deterministic ───────────────────────
+  print("\n[Test 11] Encryption is deterministic")
+  ct_a = encrypt_string("hello", e, n)
+  ct_b = encrypt_string("hello", e, n)
+  check("Same input --> same CT", ct_a == ct_b)
+
+  # ── 12. Wrong private key --> garbage output ─────────────────
+  print("\n[Test 12] Wrong private key gives wrong result")
+  ct   = encrypt_string("secret", e, n)
+  try:
+    bad  = decrypt_string(ct, d + 1, n)    # wrong d
+    check("Wrong key gives wrong result", bad != "secret")
+  except Exception:
+    check("Wrong key causes failure (acceptable)", True)
+
+  print("\n" + "=" * 55)
+  print("  All rsa.py tests passed ✓")
+  print("=" * 55 + "\n")
+
+# --- shor_algo.py ---
+import math
+import random
+
+from rsa import encrypt_string, decrypt_string
+
+def period(a, n):
+  # Objective: Find r such that a^r = 1 mod n
+  # This would normally be done with a quantum computer, but I'm doing it classically for demonstration
+  r = 1
+  value = a % n
+  while value != 1:
+    value = (value * a) % n
+    r += 1
+    # Safety limit
+    if r > n:
+      return None
+  return r
+
+def shor_algorithm(n):
+  # If we got an even number, just return 2 and n/2 as the factors
+  if n % 2 == 0:
+    return 2, n // 2
+
+  # Giving 10 retries to factorize, a retry will fail if we can't find a valid period
+  for attempt in range(10):
+    a = random.randint(2, n-1)
+
+    gcd = math.gcd(a, n)
+    if gcd != 1:
+      return gcd, n // gcd
+
+    r = period(a, n)
+
+    if r is None or r % 2 != 0:
+      continue
+
+    factor1 = math.gcd(pow(a, r // 2) - 1, n)
+    factor2 = math.gcd(pow(a, r // 2) + 1, n)
+
+    # Make sure the factors we got aren't 1, n
+    if factor1 != 1 and factor1 != n:
+      return factor1, factor2
+
+  return None
+
+def generate_rsa_keypair():
+  #Generate the keypair, but with small values of p and q.
+  #The keypair is intentionally weak to demonstrate Shor's algo
+  p, q = 61, 53 # 7919, 1009 #random small primes for now
+  N = p * q
+  e = 65537
+  phi = (p-1) * (q-1)
+  d = pow(e, -1, phi)
+
+  public_keypair = (e, N)
+  private_keypair = (d, N)
+  return public_keypair, private_keypair, p, q
+
+def recover_private_key(pub_e: int, pub_n: int):
+  """
+  Given only the public key (e, n), use Shor's to factor n,
+  then compute d = e^(-1) mod phi(n).
+  Returns d or None if factoring fails.
+  """
+  print(f"[Shor] Targeting public key: n={pub_n}, e={pub_e}")
+  result = shor_algorithm(pub_n)
+  if result is None:
+    print("[Shor] Factoring failed after 10 attempts.")
+    return None
+  p, q = result
+  phi_n = (p - 1) * (q - 1)
+  d = pow(pub_e, -1, phi_n)
+  print(f"[Shor] Factored n={pub_n} --> p={p}, q={q}")
+  print(f"[Shor] Recovered private key: d={d}")
+  return d
+
+def demonstrate_attack(payload = None):
+  if payload is None:
+    public_key, private_key, original_p, original_q = generate_rsa_keypair()
+    e, n = public_key
+
+    vmid = "DEMO_VMID_12345"
+    pin = "9999"
+
+    vmid_ct = encrypt_string(vmid, e, n)
+    pin_ct = encrypt_string(pin, e, n)
+
+    print(f"[Shor] Generated demo key: n={n}")
+  else:
+    e = payload["rsa_e"]
+    n = payload["rsa_n"]
+    vmid_ct = payload["VMID_enc"]
+    pin_ct = payload["PIN_enc"]
+
+    print("[Shor] Attacking real payload...")
+
+  d = recover_private_key(e, n)
+  if d is None:
+    print("[Shor] Attack failed.")
+    print("─" * 60 + "\n")
+    return False
+
+  vmid = decrypt_string(vmid_ct, d, n)
+  pin = decrypt_string(pin_ct, d, n)
+
+  print(f"\n[Shor] Decrypted VMID : {vmid}")
+  print(f"[Shor] Decrypted PIN : {pin}")
+  print("[Shor] RSA is broken under Shor's Algorithm.")
+  print("─" * 60 + "\n")
+
+  return True
+
+  '''
+  print(f"RSA Public Key: e={e}, N={N}")
+  print(f"Attacker only knows N={N}. Attempting to factor it...")
+
+  result = shor_algorithm(N)
+
+  if result:
+    found_p, found_q = result
+    print(f"Shor's algorithm recovered factors: p={found_p}, q={found_q}")
+    print(f"Original factors were:              p={original_p}, q={original_q}")
+
+    # Reconstruct private key from broken factors
+    phi = (found_p - 1) * (found_q - 1)
+    recovered_d = pow(e, -1, phi)
+    print(f"Private key recovered: d={recovered_d}")
+    print(f"Original private key:  d={private_key[0]}")
+    print("RSA encryption is BROKEN for this key.")
+  else:
+    print("Factoring failed.")
+  '''
+
+if __name__ == "__main__":
+  demonstrate_attack()
+
+# --- test_integration.py ---
+"""
+Integration tests for the EV Charging Payment Gateway.
+Tests the complete payment flow from user registration to blockchain verification.
+"""
+
+import sys
+from grid import Grid
+from user import User
+from franchise import Franchise
+from kiosk import Kiosk
+import datetime
+
+PASS = "✓"
+FAIL = "✗"
+
+def check(label, condition):
+  status = PASS if condition else FAIL
+  print(f"  [{status}] {label}")
+  if not condition:
+    raise AssertionError(f"FAILED: {label}")
+
+def test_complete_payment_flow():
+  """Test: User registers --> Franchise registers --> Generate QR --> Process payment"""
+  print("\n" + "=" * 70)
+  print("  INTEGRATION TEST: Complete Payment Flow")
+  print("=" * 70)
+
+  # Setup
+  print("\n[Setup] Initializing Grid Authority...")
+  grid = Grid()
+  check("Grid initialized", grid is not None)
+
+  # Step 1: User Registration
+  print("\n[Step 1] User Registration")
+  user = User("Alice", 9000000001, "1234", "Z1", grid, 1000)
+  check("User UID generated", user.uid is not None)
+  check("User VMID generated", user.vmid is not None)
+  check("User registered in grid", user.uid in grid.users)
+  check("User balance correct", user.u_balance == 1000)
+
+  # Step 2: Franchise Registration
+  print("\n[Step 2] Franchise Registration")
+  franchise = Franchise("ChargingStation_Zone1", "ACC001", "Z1", "pass123", 500, grid)
+  check("Franchise FID generated", franchise.fid is not None)
+  check("Franchise registered in grid", franchise.fid in grid.franchises)
+  check("Franchise balance correct", franchise.f_balance == 500)
+
+  # Step 3: Kiosk Creation & QR Generation
+  print("\n[Step 3] QR Code Generation")
+  kiosk = Kiosk(grid, franchise)
+  kiosk.generate_qrcode()
+  check("QR code generated", franchise.vfid is not None)
+  check("Kiosk timestamp set", kiosk.timestamp is not None)
+
+  # Step 4: User Charge Request
+  print("\n[Step 4] User Payment Request (RSA Encryption)")
+  qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
+  payload = user.charge_request(qr_filename, 200)
+  check("Payload has VMID_enc", "VMID_enc" in payload)
+  check("Payload has PIN_enc", "PIN_enc" in payload)
+  check("Payload has amount", payload["amount"] == 200)
+
+  # Step 5: Process Payment
+  print("\n[Step 5] Process Payment")
+  result = kiosk.process_payment(payload) # single arg
+  check("Result returned", result is not None)
+  check("Payment successful", result["success"] == True)
+
+  # Step 6: Verify Balances Updated
+  print("\n[Step 6] Balance Verification")
+  check("User balance deducted", user.u_balance == 800) # 1000 - 200
+  check("Franchise balance credited", franchise.f_balance == 700) # 500 + 200
+
+  # Step 7: Verify Blockchain
+  print("\n[Step 7] Blockchain Verification")
+  check("Transaction recorded in blockchain", len(grid.blockchain) == 1)
+  check("Block has correct amount", grid.blockchain[0]["amount"] == 200)
+  check("Block marked as not dispute", grid.blockchain[0]["dispute_flag"] == False)
+
+  # Step 8: Verify Chain Integrity
+  print("\n[Step 8] Chain Integrity Check")
+  chain_valid = grid.verify_chain()
+  check("Blockchain chain is intact", chain_valid == True)
+
+  print("\n" + "=" * 70)
+  print("  ✓ INTEGRATION TEST PASSED")
+  print("=" * 70 + "\n")
+
+def test_insufficient_balance():
+  """Test: Payment rejected due to insufficient balance"""
+  print("\n" + "=" * 70)
+  print("  TEST: Insufficient Balance")
+  print("=" * 70)
+
+  grid = Grid()
+  user = User("Bob", 9000000002, "5678", "Z2", grid, 100)  # Only 100 balance
+  franchise = Franchise("ChargingStation_Zone2", "ACC002", "Z2", "pass456", 500, grid)
+
+  kiosk = Kiosk(grid, franchise)
+  kiosk.generate_qrcode()
+
+  qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
+  payload = user.charge_request(qr_filename, 500)  # Trying to charge 500 but only has 100
+
+  result = kiosk.process_payment(payload)
+  check("Payment rejected", result["success"] == False)
+  check("Reason is insufficient balance", "Grid Authority rejected" in result["reason"])
+  check("User balance unchanged", user.u_balance == 100)
+  check("No blockchain entry created", len(grid.blockchain) == 0)
+
+  print("\n" + "=" * 70)
+  print("  ✓ INSUFFICIENT BALANCE TEST PASSED")
+  print("=" * 70 + "\n")
+
+def test_wrong_pin():
+  """Test: Payment rejected due to wrong PIN"""
+  print("\n" + "=" * 70)
+  print("  TEST: Wrong PIN")
+  print("=" * 70)
+
+  grid = Grid()
+  user = User("Charlie", 9000000003, "1111", "Z3", grid, 500)
+  franchise = Franchise("ChargingStation_Zone3", "ACC003", "Z3", "pass789", 500, grid)
+
+  kiosk = Kiosk(grid, franchise)
+  kiosk.generate_qrcode()
+
+  qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
+  payload = user.charge_request(qr_filename, 200)
+
+  # Manually corrupt the PIN in payload (simulate wrong PIN)
+  import rsa as rsa_module
+  payload["PIN_enc"] = rsa_module.encrypt_string("9999", payload["rsa_e"], payload["rsa_n"])
+
+  result = kiosk.process_payment(payload)
+  check("Payment rejected", result["success"] == False)
+  check("User balance unchanged", user.u_balance == 500)
+
+  print("\n" + "=" * 70)
+  print("  ✓ WRONG PIN TEST PASSED")
+  print("=" * 70 + "\n")
+
+def test_hardware_failure_refund():
+  """Test: Hardware failure after payment --> automatic refund"""
+  print("\n" + "=" * 70)
+  print("  TEST: Hardware Failure with Auto-Refund")
+  print("=" * 70)
+
+  grid = Grid()
+  user = User("Diana", 9000000004, "2222", "Z4", grid, 1000)
+  franchise = Franchise("ChargingStation_Zone1", "ACC004", "Z1", "pass111", 500, grid)
+
+  # Configure franchise to fail hardware unlock
+  franchise.hardware_failure_rate = 1.0
+
+  kiosk = Kiosk(grid, franchise)
+  kiosk.generate_qrcode()
+
+  qr_filename = f"qrcode_xxxxxx{franchise.vfid[-6:]}.png"
+  payload = user.charge_request(qr_filename, 300)
+
+  result = kiosk.process_payment(payload)
+
+  check("Payment indicates hardware failure", "Hardware failure" in result["reason"])
+  check("Refund was triggered", result.get("refund") == True)
+  check("User refunded", user.u_balance == 1000)  # Back to original
+  check("Franchise debited", franchise.f_balance == 500)  # Back to original
+  check("Two blockchain entries (transaction + refund)", len(grid.blockchain) == 2)
+  check("Refund block marked as dispute", grid.blockchain[-1]["dispute_flag"] == True)
+
+  print("\n" + "=" * 70)
+  print("  ✓ HARDWARE FAILURE REFUND TEST PASSED")
+  print("=" * 70 + "\n")
+
+
+def test_multiple_transactions():
+  """Test: Multiple transactions in sequence with SEPARATE kiosks"""
+  print("\n" + "=" * 70)
+  print("  TEST: Multiple Transactions")
+  print("=" * 70)
+
+  grid = Grid()
+
+  # Create 2 users and 2 franchises
+  user1 = User("Eve", 9000000005, "3333", "Z5", grid, 1000)
+  user2 = User("Frank", 9000000006, "4444", "Z6", grid, 800)
+
+  franchise1 = Franchise("Station_A", "ACC005", "Z1", "pass222", 100, grid)
+  franchise2 = Franchise("Station_B", "ACC006", "Z2", "pass333", 200, grid)
+
+  # Transaction 1: User1 --> Franchise1
+  print("\n  Transaction 1: User1 charges 150 at Franchise1")
+  kiosk1 = Kiosk(grid, franchise1)
+  kiosk1.generate_qrcode()
+  qr1 = f"qrcode_xxxxxx{franchise1.vfid[-6:]}.png"
+  payload1 = user1.charge_request(qr1, 150)
+  result1 = kiosk1.process_payment(payload1)
+  check("Transaction 1 successful", result1["success"] == True)
+
+  # Transaction 2: User2 --> Franchise2
+  # IMPORTANT: Create a NEW kiosk with fresh timestamp!
+  print("\n  Transaction 2: User2 charges 200 at Franchise2")
+  kiosk2 = Kiosk(grid, franchise2)  # NEW kiosk instance
+  kiosk2.generate_qrcode()  # Generates fresh QR with new timestamp
+  qr2 = f"qrcode_xxxxxx{franchise2.vfid[-6:]}.png"
+  payload2 = user2.charge_request(qr2, 200)
+  result2 = kiosk2.process_payment(payload2)
+  check("Transaction 2 successful", result2["success"] == True)
+
+  # Transaction 3: User1 --> Franchise2
+  # Create ANOTHER NEW kiosk with fresh timestamp
+  print("\n  Transaction 3: User1 charges 100 at Franchise2")
+  kiosk3 = Kiosk(grid, franchise2)  # NEW kiosk instance
+  kiosk3.generate_qrcode()  # Generates fresh QR with new timestamp
+  qr3 = f"qrcode_xxxxxx{franchise2.vfid[-6:]}.png"
+  payload3 = user1.charge_request(qr3, 100)
+  result3 = kiosk3.process_payment(payload3)
+  check("Transaction 3 successful", result3["success"] == True)
+
+  # Verify final balances
+  print("\n  Final Balances:")
+  check("User1 balance (1000-150-100)", user1.u_balance == 750)
+  check("User2 balance (800-200)", user2.u_balance == 600)
+  check("Franchise1 balance (100+150)", franchise1.f_balance == 250)
+  check("Franchise2 balance (200+200+100)", franchise2.f_balance == 500)
+
+  # Verify blockchain
+  check("3 transaction blocks created", len(grid.blockchain) == 3)
+  chain_valid = grid.verify_chain()
+  check("Blockchain integrity intact", chain_valid == True)
+
+  print("\n" + "=" * 70)
+  print("  ✓ MULTIPLE TRANSACTIONS TEST PASSED")
+  print("=" * 70 + "\n")
+
+if __name__ == "__main__":
+  try:
+    test_complete_payment_flow()
+    test_insufficient_balance()
+    test_wrong_pin()
+    test_hardware_failure_refund()
+    test_multiple_transactions()
+
+    print("\n" + "=" * 70)
+    print("  ✓✓✓ ALL INTEGRATION TESTS PASSED ✓✓✓")
+    print("=" * 70 + "\n")
+  except AssertionError as e:
+    print(f"\n✗ TEST FAILED: {e}\n")
+    sys.exit(1)
+
+# --- user.py ---
+import os
+import hashlib
+import cv2
+
+import rsa
+
+class User:
+  def __init__(self, u_name:str, u_phone:int, u_pin:str, u_zone_code, grid, u_balance = 0.0):
+    self.u_name = u_name
+    self.u_phone = u_phone
+    self.u_pin = u_pin
+    self.u_balance = u_balance
+    self.u_zone_code = u_zone_code
+    self.grid = grid
+
+    self.uid = None
+    self.vmid = None
+    self.req_validation_and_generate_uid()
+
+  def req_validation_and_generate_uid(self):
+    confirmation = self.grid.req_user_validation(self)
+    if (confirmation == True):
+      print(f"User '{self.u_name}' registered with UID: {self.uid}")
+    else:
+      print("User registration failed")
+
+  def scan_qrcode(self, qrcode_file_name: str):
+    """
+    The EV Owner scans the QR code displayed on the Kiosk screen.
+
+    Responsibility split:
+      - User.scan_qrcode()     : reads the QR image and returns the raw
+                                  encoded string. This is the "scan" action.
+      - Kiosk.decrypt_qrcode() : receives that raw string and does the
+                                  ASCON decryption + FID verification.
+                                  The ASCON key is shared between Grid and
+                                  Kiosk, not the user — so decryption stays
+                                  in Kiosk.
+
+    Returns the raw QR string on success, None on failure.
+    """
+    if not qrcode_file_name:
+      print("QR file name is None.")
+      return None
+
+    img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
+    if img is None:
+      print(f"Could not read QR image: {qrcode_file_name}")
+      return None
+
+    detector = cv2.QRCodeDetector()
+    decoded_data, _, _ = detector.detectAndDecode(img)
+
+    if not decoded_data:
+      print("QR decode failed — blank or unreadable.")
+      return None
+
+    print(f"QR scanned successfully.")
+    return decoded_data
+
+  def charge_request(self, qrcode_path, charge_amount:float):
+    """
+    Prepares an RSA-encrypted payment payload to hand to the Kiosk.
+
+    Per spec the VMID and PIN are transmitted over the network and must
+    be encrypted. We use RSA here so that shor.py can demonstrate that
+    this classical scheme is breakable with a quantum computer.
+
+    The Grid's public key (e, n) is assumed to be known to the user device
+    (e.g. obtained from the kiosk at session start).
+
+    Payload returned:
+      QR_path   - path to the scanned QR image
+      VMID_enc  - list of RSA-encrypted ordinals of each VMID character
+      PIN_enc   - RSA-encrypted PIN integer
+      amount    - plaintext (not sensitive; used for billing display)
+      rsa_e, rsa_n - public key sent alongside so the receiver can verify
+    """
+    qr_raw_data = self.scan_qrcode(qrcode_path)
+    if qr_raw_data is None:
+      print("[User] charge_request aborted — QR scan failed.")
+      return None
+
+    rsa_e, rsa_d, rsa_n = rsa.generate_keys()
+
+    payload = {"QR_raw_data": qr_raw_data,
+              "VMID_enc" : rsa.encrypt_string(self.vmid, rsa_e, rsa_n),
+              "PIN_enc": rsa.encrypt_string(self.u_pin, rsa_e, rsa_n),
+              "amount": charge_amount,
+              "rsa_e": rsa_e,
+              "rsa_n": rsa_n,
+              "_rsa_d": rsa_d}
+    return payload
+
+  '''
+  def decrypt_qrcode(self, qrcode_file_name = None):
+    # and verify hash???
+
+    # 1. load and decode the qr code
+    # img = Image.open(os.path.join("qrcodes", qrcode_file_name))
+    # decoded_objects = decode(img)
+
+    if not qrcode_file_name:
+      print("QR file name is None - failed")
+      return None, None
+
+    img = cv2.imread(os.path.join("qrcodes", qrcode_file_name))
+    detector = cv2.QRCodeDetector()
+    decoded_qr_data, _, _ = detector.detectAndDecode(img)
+
+    # print(decoded_qr_data)
+    # print(type(decoded_qr_data))
+
+    if not decoded_qr_data:
+      print("QR data is None - failed")
+      return None, None
+
+    # 2. extract the data
+    # for obj in decoded_objects:
+    #   scanned_hash = obj.data.decode('utf-8')
+    #   print(f"Scanned Hash: {scanned_hash}")
+    # data = decoded_object.decode('utf-8')
+
+    # Step 2: Split VFID and timestamp
+    try:
+      parts = decoded_qr_data.split(", ")
+      if len(parts) != 2:
+        print("Invalid QR format, line 84")
+        return None, None
+
+      vfid_hex = parts[0].strip()
+      ts = parts[1].strip()
+
+      # print("Original vfid (first 10 bytes):", self.franchise.vfid[:20])
+      # print("Decoded vfid (first 10 bytes):", vfid_hex[:20])
+      # print(self.franchise.vfid == vfid_hex)
+
+      vfid_from_decoded_qr = bytes.fromhex(vfid_hex)
+
+    except:
+      print("Invalid QR format, line 97")
+      return None, None
+
+    try:
+      if (ts == self.timestamp):
+        # NOTE: To "verify", you must re-hash known data and check if the hashes match.
+
+        key = b"RaksAditPriyVeda"
+        nonce = self.timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
+        # nonce - number used once; ensures same input != same output and prevents replay attacks
+        ad = self.timestamp.encode("utf-8")
+
+        # step: Decrypt
+        pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
+        fid = pt.decode()
+
+        if (fid == self.franchise.fid):
+          return True, fid # placeholder
+        else:
+          raise Exception("FIDs don't match")
+          # return False, None # placeholder
+      else:
+        raise Exception("Timestamps don't match")
+
+    except Exception as e:
+      print(f"{e}")
+      print("Decryption failed --> tampered QR")
+      return None, None
+  '''
+
+'''
+handoff:
+user.scan_qrcode(filename)     --> "abc123..., 12-04-26 14:30:00"
+kiosk.decrypt_qrcode(that_str) --> (True, "FID_ABC123")
+'''
+
+if __name__ == "__main__":
+  from grid      import Grid
+  from franchise import Franchise
+  from rsa       import decrypt_string
+
+  PASS = "✓"
+  FAIL = "✗"
+
+  def check(label, condition):
+    status = PASS if condition else FAIL
+    print(f"  [{status}] {label}")
+    if not condition:
+      raise AssertionError(f"FAILED: {label}")
+
+  print("\n" + "=" * 55)
+  print("  user.py — self-test")
+  print("=" * 55)
+
+  grid = Grid()
+  fr   = Franchise("Station1", "ACC001", "Z1", "pass", 1000, grid)
+
+  # 1. Valid registration
+  print("\n[Test 1] Valid user registration")
+  u = User("Alice", 9000000001, "1234", "Z1", grid, 500)
+  check("UID set",          u.uid  is not None)
+  check("VMID set",         u.vmid is not None)
+  check("VMID format",      u.vmid == f"{u.uid}_{u.u_phone}")
+  check("In grid registry", u.uid in grid.users)
+  check("Balance correct",  u.u_balance == 500)
+
+  # 2. Second user — different UID/VMID
+  print("\n[Test 2] Second user gets different UID/VMID")
+  u2 = User("Bob", 9000000002, "5678", "Z2", grid, 300)
+  check("Different UID",  u.uid  != u2.uid)
+  check("Different VMID", u.vmid != u2.vmid)
+
+  # 3. None name --> validation failure
+  print("\n[Test 3] User with None name (validation failure)")
+  u_bad = User(None, 9000000003, "0000", "Z1", grid, 100)
+  check("UID is None",  u_bad.uid  is None)
+  check("VMID is None", u_bad.vmid is None)
+
+  # 4. Payload structure
+  print("\n[Test 4] charge_request — payload structure")
+  payload = u.charge_request("qrcodes/test.png", 200)
+  check("Has QR_raw_data", "QR_raw_data"  in payload)
+  check("Has VMID_enc",    "VMID_enc" in payload)
+  check("Has PIN_enc",     "PIN_enc"  in payload)
+  check("Has amount",      "amount"   in payload)
+  check("Has rsa_e",       "rsa_e"    in payload)
+  check("Has rsa_n",       "rsa_n"    in payload)
+  check("Has _rsa_d",      "_rsa_d"   in payload)
+  check("Amount correct",  payload["amount"] == 200)
+
+  # 5. Encrypted fields are lists of ints
+  print("\n[Test 5] Encrypted fields are lists of ints")
+  check("VMID_enc is list",  isinstance(payload["VMID_enc"], list))
+  check("PIN_enc  is list",  isinstance(payload["PIN_enc"],  list))
+  check("VMID_enc has ints", all(isinstance(x, int) for x in payload["VMID_enc"]))
+  check("PIN_enc  has ints", all(isinstance(x, int) for x in payload["PIN_enc"]))
+
+  # 6. Encrypted ≠ raw bytes
+  print("\n[Test 6] Ciphertext differs from raw UTF-8 bytes")
+  raw_vmid_bytes = list(u.vmid.encode("utf-8"))
+  raw_pin_bytes  = list(u.u_pin.encode("utf-8"))
+  check("VMID_enc ≠ raw bytes", payload["VMID_enc"] != raw_vmid_bytes)
+  check("PIN_enc  ≠ raw bytes", payload["PIN_enc"]  != raw_pin_bytes)
+
+  # 7. RSA round-trip via decrypt_string
+  print("\n[Test 7] RSA round-trip — decrypt_string recovers originals")
+  rsa_d = payload["_rsa_d"]
+  rsa_n = payload["rsa_n"]
+  vmid_dec = decrypt_string(payload["VMID_enc"], rsa_d, rsa_n)
+  pin_dec  = decrypt_string(payload["PIN_enc"],  rsa_d, rsa_n)
+  check("VMID decrypts correctly", vmid_dec == u.vmid)
+  check("PIN  decrypts correctly", pin_dec  == u.u_pin)
+
+  # 8. Different charge amounts
+  print("\n[Test 8] Different charge amounts produce different payloads")
+  p1 = u.charge_request("qrcodes/test.png", 100)
+  p2 = u.charge_request("qrcodes/test.png", 200)
+  check("Different amounts in payload", p1["amount"] != p2["amount"])
+
+  # 9. VMID length matches encrypted length (one int per UTF-8 byte)
+  print("\n[Test 9] VMID_enc length == len(vmid.encode('utf-8'))")
+  check("Length matches", len(payload["VMID_enc"]) == len(u.vmid.encode("utf-8")))
+
+  print("\n" + "=" * 55)
+  print("  All user.py tests passed ✓")
+  print("=" * 55 + "\n")
+

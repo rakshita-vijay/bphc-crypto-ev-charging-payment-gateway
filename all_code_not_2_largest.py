@@ -2,7 +2,9 @@ import os, sys
 
 all_files = []
 
-with open("code_not_2_largest.py", "w") as out_file:
+file_name = "code_not_2_largest.py"
+
+with open(file_name, "w") as out_file:
   for root, dirs, files in os.walk(os.getcwd()):
     dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'qrcodes', 'pages']]
     files[:] = [f for f in files if f not in ['.gitignore', '_to_do.txt', 'all_code.py', 'app.py', 'code.py', 'README.md', 'v_imp_to_clear_qrcodes.py']]

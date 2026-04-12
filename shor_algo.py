@@ -48,7 +48,7 @@ def generate_rsa_keypair():
   #The keypair is intentionally weak to demonstrate Shor's algo
   p, q = 61, 53 # 7919, 1009 #random small primes for now
   N = p * q
-  e = 17
+  e = 65537
   phi = (p-1) * (q-1)
   d = pow(e, -1, phi)
 

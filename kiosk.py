@@ -6,7 +6,7 @@ import cv2
 from PIL import Image
 import time
 
-from ascon_lwc import ascon_decrypt
+from ascon_lwc import get_key_nonce_pt_ad, ascon_decrypt
 # from pyzbar.pyzbar import decode
 
 import shor_algo
@@ -26,6 +26,8 @@ class Kiosk:
 
     self.timestamp = ((datetime.datetime.now()).strftime("%d-%m-%y %H:%M:%S"))
     vfid = self.grid.generate_vfid(fid, self.timestamp)
+    if vfid is None:
+      raise Exception("vfid is none")
     self.franchise.vfid = vfid
 
     qr_data = f"{vfid}, {self.timestamp}"
@@ -41,8 +43,7 @@ class Kiosk:
 
     time.sleep(0.1)  # Ensure filesystem flush
     if not os.path.exists(qr_filename):
-      print(f"ERROR: QR code file was not saved: {qr_filename}")
-      return
+      raise Exception(f"ERROR: QR code file was not saved: {qr_filename}")
 
     print(f"QR code generated and saved as qrcode_xxxxxx{vfid[-6:]}.png in the folder 'qrcodes'")
     self.franchise.display_qrcode(f"qrcode_xxxxxx{vfid[-6:]}.png")
@@ -97,20 +98,21 @@ class Kiosk:
       if (ts == self.timestamp):
         # NOTE: To "verify", you must re-hash known data and check if the hashes match.
 
-        key = b"RaksAditPriyVeda"
-        nonce = self.timestamp.encode("utf-8")[:16].ljust(16, b"\x00") # .ljust(16, b"\x00") pads with zeros if shorter
-        # nonce - number used once; ensures same input != same output and prevents replay attacks
-        ad = self.timestamp.encode("utf-8")
+        key, nonce, pt, ad = get_key_nonce_pt_ad(fid, timestamp)
 
-        # step: Decrypt
-        pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
-        fid = pt.decode()
+        req_fields = [key, nonce, pt, ad]
+        if all(x is not None for x in req_fields):
+          # step: Decrypt
+          pt = ascon_decrypt(key, nonce, ad, vfid_from_decoded_qr)
+          fid = pt.decode()
 
-        if (fid == self.franchise.fid):
-          return True, fid # placeholder
+          if (fid == self.franchise.fid):
+            return True, fid # placeholder
+          else:
+            raise Exception("FIDs don't match")
+            # return False, None # placeholder
         else:
-          raise Exception("FIDs don't match")
-          # return False, None # placeholder
+          return Exception("Decryption failed - something in req_fields is None")
       else:
         raise Exception("Timestamps don't match")
 
