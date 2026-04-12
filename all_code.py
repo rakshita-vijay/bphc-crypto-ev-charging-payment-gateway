@@ -4,33 +4,24 @@ all_files = []
 
 with open("code.py", "w") as out_file:
   for root, dirs, files in os.walk(os.getcwd()):
-    dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'qrcodes']]
-    files[:] = [f for f in files if f not in ['.gitignore', 'all_code.py', 'code.txt', 'README.md', 'v_imp_to_clear_qrcodes.py']]
+    dirs[:] = [d for d in dirs if d not in ['.git', '__pycache__', 'qrcodes', 'pages']]
+    files[:] = [f for f in files if f not in ['.gitignore', 'all_code_not_2_largest.py', 'all_code.py', 'app.py', 'code_not_2_largest.py', 'code.py', 'README.md', 'v_imp_to_clear_qrcodes.py']]
 
     for file in files:
       file_path = os.path.join(root, file)
       try:
         size = os.path.getsize(file_path)
-        all_files.append({
-          "fn": file_path,
-          "len": size
-        })
+        all_files.append(file_path)
       except Exception:
         continue
 
-  if len(all_files) < 2:
-    print("Not enough files")
+  if len(all_files) == 0:
+    print("No files found")
     exit()
 
-  sorted_data = sorted(all_files, key=lambda x: x["len"])
-  last2 = [sorted_data[-1]["fn"], sorted_data[-2]["fn"]]
-  print(f"Download and attach: {last2[0].split('/')[-1]} and {last2[1].split('/')[-1]}")
+  sorted_data = sorted(all_files)
 
-  for file_data in all_files:
-    file_path = file_data["fn"]
-    if file_path in last2:
-      continue
-
+  for file_path in sorted_data:
     try:
       with open(file_path, "r") as fi:
         out_file.write(f"# --- {file_path.split('/')[-1]} ---\n")

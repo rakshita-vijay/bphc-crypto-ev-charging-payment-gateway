@@ -159,7 +159,7 @@ class Kiosk:
 
     # Step 1: Verify QR Code Authenticity
     print("\n[Step 1] Verifying QR Code...")
-    confirmation, fid_from_decrypt = self.decrypt_qrcode(qrcode_file_name)
+    confirmation, fid_from_decrypt = self.decrypt_qrcode(payload["QR_raw_data"])
 
     if confirmation is None or confirmation == False or fid_from_decrypt != fid:
       print("✗ Payment FAILED: Invalid or tampered QR code")
