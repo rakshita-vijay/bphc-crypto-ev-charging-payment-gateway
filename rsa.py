@@ -9,8 +9,8 @@ import json
 
 # RSA Key Generation
 def generate_keys():
-  p = 7919 # or 4563413
-  q = 1009 # or 3457631
+  p = 61 # 7919 # or 4563413
+  q = 53 # 1009 # or 3457631
   n = p * q
   phi = (p - 1) * (q - 1)
 
@@ -166,11 +166,11 @@ if __name__ == "__main__":
 
   # ── 1. Key sanity ──────────────────────────────────────────
   print("\n[Test 1] Key generation sanity")
-  phi = (7919 - 1) * (1009 - 1)
+  phi = (61 - 1) * (53 - 1)
   check("e > 1",               e > 1)
   check("d > 1",               d > 1)
   check("e*d ≡ 1 (mod phi)",   (e * d) % phi == 1)
-  check("n = 7919*1009",       n == 7919 * 1009)
+  check("n = 61*53",       n == 61 * 53)
 
   # ── 2. Integer round-trip ─────────────────────────────────
   print("\n[Test 2] Integer round-trip")

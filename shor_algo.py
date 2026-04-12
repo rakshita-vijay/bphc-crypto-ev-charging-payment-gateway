@@ -46,7 +46,7 @@ def shor_algorithm(n):
 def generate_rsa_keypair():
   #Generate the keypair, but with small values of p and q.
   #The keypair is intentionally weak to demonstrate Shor's algo
-  p, q = 7919, 1009 #random small primes for now
+  p, q = 61, 53 # 7919, 1009 #random small primes for now
   N = p * q
   e = 17
   phi = (p-1) * (q-1)
@@ -77,7 +77,7 @@ def recover_private_key(pub_e: int, pub_n: int):
 def demonstrate_attack(payload = None):
   if payload is None:
     public_key, private_key, original_p, original_q = generate_rsa_keypair()
-    e, N = public_key
+    e, n = public_key
 
     vmid = "DEMO_VMID_12345"
     pin = "9999"

@@ -4,6 +4,7 @@ import hashlib
 import qrcode
 import cv2
 from PIL import Image
+import time
 
 from ascon_lwc import ascon_decrypt
 # from pyzbar.pyzbar import decode
@@ -31,10 +32,17 @@ class Kiosk:
 
     # Generate the QR code image using the make() shortcut function
     qr = qrcode.make(qr_data)
+    qr = qr.convert('RGB')
 
     # Save Image
     os.makedirs("qrcodes", exist_ok=True)
-    qr.save(f"qrcodes/qrcode_xxxxxx{vfid[-6:]}.png")
+    qr_filename = f"qrcodes/qrcode_xxxxxx{vfid[-6:]}.png"
+    qr.save(qr_filename)
+
+    time.sleep(0.1)  # Ensure filesystem flush
+    if not os.path.exists(qr_filename):
+      print(f"ERROR: QR code file was not saved: {qr_filename}")
+      return
 
     print(f"QR code generated and saved as qrcode_xxxxxx{vfid[-6:]}.png in the folder 'qrcodes'")
     self.franchise.display_qrcode(f"qrcode_xxxxxx{vfid[-6:]}.png")
